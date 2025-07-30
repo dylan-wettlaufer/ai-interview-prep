@@ -1,0 +1,28 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment files (do NOT commit secrets)
+.env
+.env.*
+
+# Virtual environment folder
+.venv/
+venv/
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Python bytecode
+*.pyc
+
+# Misc
+*.DS_Store
