@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from jose import JWTError, jwt
 from utils.supabase_client import supabase
-from schemas.auth import SignupRequest
+from schemas.auth import SignupRequest, LoginRequest
 
 load_dotenv()
 
@@ -64,10 +64,10 @@ async def signup(data: SignupRequest):
         )
 
 @router.post("/login")
-async def login(email: str, password: str):
+async def login(data: LoginRequest):
     response = supabase.auth.sign_in_with_password({
-        "email": email,
-        "password": password
+        "email": data.email,
+        "password": data.password
     })
     return response
 

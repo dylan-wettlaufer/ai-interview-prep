@@ -5,3 +5,8 @@ class SignupRequest(BaseModel):
     password: str
     first_name: str
     last_name: str
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
