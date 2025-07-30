@@ -1,14 +1,7 @@
 from fastapi import FastAPI
-from dotenv import load_dotenv
-from supabase import create_client, Client
-from auth import router as auth_router
+from features.auth.auth import router as auth_router
+from utils.supabase_client import supabase
 
-load_dotenv()
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI()
 
