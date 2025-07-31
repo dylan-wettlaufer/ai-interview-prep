@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from jose import JWTError, jwt
 from utils.supabase_client import supabase
 from schemas.auth import SignupRequest, LoginRequest
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -69,7 +70,11 @@ async def login(data: LoginRequest):
         "email": data.email,
         "password": data.password
     })
-    return response
+    access_token = create_access_token(data.email)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 
 @router.post("/logout")
 async def logout():
@@ -99,6 +104,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def create_access_token(email: str):
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {
+        "sub": email,
+        "exp": expire
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    return token
 
 @router.get("/protected")
 async def protected_route(current_user: str = Depends(get_current_user)):
