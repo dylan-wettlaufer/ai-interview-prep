@@ -1,6 +1,7 @@
 // A simple Logout button component
 "use client";
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -32,8 +33,12 @@ export default function LogoutButton() {
   };
 
   return (
-    <button onClick={handleLogout} className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded">
-      Logout
-    </button>
+    <button
+        onClick={handleLogout}
+        className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-neutral-700 w-full text-left"
+      >
+        <LogOut size={16} />
+        Logout
+      </button>
   );
 }

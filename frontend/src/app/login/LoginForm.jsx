@@ -134,7 +134,7 @@ export default function LoginForm() {
                         name={id}
                         value={formData[id]}
                         onChange={handleChange}
-                        className={`mt-1 mb-4 p-2 h-8 block w-full rounded-md bg-neutral-700 text-white border border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 ${
+                        className={`mt-1 mb-4 p-2 h-8 block w-full rounded-md bg-neutral-700 text-white border border-neutral-600 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 ${
                         errors[id] ? 'border-rose-500 ring-rose-500' : ''
                         }`}
                     />
