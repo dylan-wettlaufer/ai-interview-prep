@@ -17,7 +17,7 @@ import {
 
 export default function DashboardHeader() {
     return (
-        <header className="sticky top-0 z-50 bg-neutral-950 border-b border-neutral-800 p-4 flex items-center justify-between">
+        <header className="sticky top-0 z-50 bg-neutral-900 border-b border-neutral-800 p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <Zap size={28} className="text-indigo-400" />
                 <h1 className="text-2xl font-bold text-gray-50">Interview AI</h1>
