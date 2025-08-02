@@ -8,10 +8,10 @@ export default function DashboardClient() {
   const router = useRouter();
 
   return (
-    <div>
+    <div className="h-screen w-screen">
       <DashboardHeader />
 
-      <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-neutral-900 h-screen w-screen">
+      <div className="flex-1 p-6 md:p-8 bg-neutral-900 h-screen w-screen">
         <div className="flex justify-between items-center mb-6">
             <div className="flex flex-col gap-2">
                 <h2 className="text-3xl font-bold text-gray-50">Welcome Dylan!</h2>
