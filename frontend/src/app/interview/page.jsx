@@ -13,7 +13,8 @@ export default function InterviewPage() {
         "Marketing Specialist",
         "Customer Service Representative",
         "Business Analyst",
-        "Cybersecurity"
+        "Cybersecurity",
+        "Other"
     ];
 
     const interviewTypes = [
@@ -34,6 +35,8 @@ export default function InterviewPage() {
 
     const handleBack = () => {
         setStep(1); // Go back to the previous step
+        setSelectedJob(null);
+        setSelectedInterviewType(null);
     };
 
     const handleInterviewTypeSelect = (interviewType) => {
@@ -51,17 +54,20 @@ export default function InterviewPage() {
         <div className="flex flex-col min-h-screen bg-neutral-900 text-white font-inter">
             <DashboardHeader />
             <div className="flex-1 relative overflow-y-auto">
-                {/* Step 1: Job Type Selection Screen */}
+                {/* Step 1: Job Type Selection Screen - Fade transition logic */}
                 <div 
-                    className={`absolute w-full h-full p-6 md:p-8 transition-transform duration-500 transform ${step === 1 ? 'translate-x-0' : '-translate-x-full'}`}>
-                    <div className="flex flex-col gap-8 justify-start items-center h-full">
+                    className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${step === 1 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+                    <div className="flex flex-col gap-8 justify-start items-center h-full p-6 md:p-8">
                         <h1 className="pt-12 text-3xl font-bold text-gray-100 text-center">Select a Job Type</h1>
+                        <p className="text-lg text-gray-400 max-w-3xl mx-auto text-center">
+                            Our AI will tailor the questions and feedback based on the selected role.
+                        </p>
                         <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
                             {jobTypes.map((jobType) => (
                                 <button 
                                     onClick={() => handleJobSelect(jobType)} 
                                     className={`
-                                        cursor-pointer border border-indigo-400 bg-indigo-200/20 hover:bg-indigo-400/20 text-white font-semibold py-2 px-4 text-sm rounded-full shadow-lg
+                                        cursor-pointer border border-indigo-500 bg-indigo-300/20 hover:bg-indigo-500/20 text-white font-semibold py-2 px-4 text-sm rounded-full shadow-lg
                                         ${selectedJob === jobType ? 'border-2' : ''}
                                     `}
                                     key={jobType}
@@ -71,24 +77,24 @@ export default function InterviewPage() {
                             ))}
                         </div>
                         <h3 className="text-2xl font-bold text-gray-100 text-center">OR</h3>
-                        <h1 className="text-2xl font-bold text-gray-100 text-center">Create a custom interview with a job description</h1>
+                        <h1 className="text-2xl font-bold text-gray-100 text-center">Create a custom interview using a job description</h1>
                         <textarea 
                             placeholder="Enter job description here or describe the key responsibilities, skills, and qualifications of the job" 
-                            className="w-full md:w-3/4 max-w-xl h-60 border bg-neutral-800 border-violet-400/20 rounded-lg p-4 mt-4 mb-4 mx-auto resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
+                            className="w-full md:w-3/4 max-w-xl h-80 md:h-60 border bg-neutral-800 border-violet-400/20 rounded-lg p-4 mt-4 mb-4 mx-auto resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
                         />
                     </div>
                 </div>
 
-                {/* Step 2: Interview Type Selection Screen */}
+                {/* Step 2: Interview Type Selection Screen - Fade transition logic */}
                 <div 
-                    className={`absolute w-full h-full p-6 md:p-8 transition-transform duration-500 transform ${step === 1 ? 'translate-x-full' : 'translate-x-0'}`}>
-                    <div className="flex flex-col gap-8 justify-start items-center h-full">
+                    className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${step === 2 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+                    <div className="flex flex-col gap-8 justify-start items-center h-full p-6 md:p-8">
                         <div className="flex w-full justify-between items-center max-w-3xl">
-                            <button onClick={handleBack} className="flex items-center text-indigo-400 hover:text-indigo-300 transition-colors duration-200">
+                            <button onClick={handleBack} className="cursor-pointer flex items-center text-indigo-400 hover:text-indigo-300 transition-colors duration-200">
                                 <ChevronLeft size={20} />
                                 Back
                             </button>
-                            <h1 className="pt-12 text-3xl font-bold text-gray-100 text-center flex-grow">Select Interview Type</h1>
+                            <h1 className="sm:mt-6 pt-12 text-3xl font-bold text-gray-100 text-center flex-grow">Select Interview Type</h1>
                             <div className="w-16"></div> {/* Spacer */}
                         </div>
 
@@ -129,15 +135,15 @@ export default function InterviewPage() {
                                 disabled={!selectedInterviewType}
                                 className={`
                                     w-full py-4 px-6 rounded-full font-bold text-lg
-                                    transition-colors duration-200
+                                    transition-colors duration-200 mb-12
                                     ${
                                         selectedInterviewType
-                                        ? 'bg-indigo-300/20 border border-indigo-500 text-white hover:bg-indigo-600/20 shadow-xl'
+                                        ? 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-xl cursor-pointer'
                                         : 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
                                     }
                                 `}
                             >
-                                Start Interview
+                                {selectedInterviewType ? 'Generate Questions and Start Interview' : 'Select an Interview Type'}
                             </button>
                         </div>
                     </div>

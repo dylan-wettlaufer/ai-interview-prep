@@ -7,7 +7,7 @@ export function middleware(request) {
   // This log MUST appear in your terminal when you try to access a protected path.
   console.log(`[Middleware] Checking path: ${pathname}, Token found: ${!!token}`);
 
-  const protectedPaths = ['/dashboard', '/profile', '/settings'];
+  const protectedPaths = ['/dashboard', '/profile', '/settings', '/interview', '/interview/type-selection'];
 
   // Redirect unauthenticated users from protected paths.
   if (protectedPaths.includes(pathname) && !token) {
@@ -32,5 +32,7 @@ export const config = {
     '/profile/:path*',
     '/settings/:path*',
     '/login',
+    '/interview',
+    '/interview/type-selection',
   ],
 };
