@@ -3,14 +3,24 @@ import { NextResponse } from 'next/server';
 export function middleware(request) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('access_token');
-  
-  // This log MUST appear in your terminal when you try to access a protected path.
+
   console.log(`[Middleware] Checking path: ${pathname}, Token found: ${!!token}`);
 
-  const protectedPaths = ['/dashboard', '/profile', '/settings', '/interview', '/interview/type-selection'];
+  // Define protected base paths and check for dynamic segments
+  const protectedBasePaths = [
+    '/dashboard',
+    '/profile',
+    '/settings',
+    '/create_interview',
+    '/interview'
+  ];
+
+  // Check if the current pathname is one of the exact protected paths OR starts with '/interview/'
+  const isPathProtected =
+    protectedBasePaths.includes(pathname) || pathname.startsWith('/interview/');
 
   // Redirect unauthenticated users from protected paths.
-  if (protectedPaths.includes(pathname) && !token) {
+  if (isPathProtected && !token) {
     console.log('[Middleware] Unauthorized access, redirecting to login.');
     return NextResponse.redirect(new URL('/login', request.url));
   }
@@ -28,11 +38,11 @@ export function middleware(request) {
 // The matcher configuration is crucial. It tells Next.js which paths the middleware should run on.
 export const config = {
   matcher: [
-    '/dashboard/:path*', 
+    '/dashboard/:path*',
     '/profile/:path*',
     '/settings/:path*',
     '/login',
-    '/interview',
-    '/interview/type-selection',
+    '/create_interview',
+    '/interview/:path*', // This ensures the middleware runs for /interview/ and its sub-paths
   ],
 };

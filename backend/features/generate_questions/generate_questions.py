@@ -101,3 +101,10 @@ async def generate_questions(request: InterviewRequest, user: dict = Depends(get
 
         
 
+@router.get("/interview/{interview_id}")
+async def get_interview(interview_id: str, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+    try:
+        response = sb.table("interview").select("*").eq("id", interview_id).execute()
+        return response.data[0]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

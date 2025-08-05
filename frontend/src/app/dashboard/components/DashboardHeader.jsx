@@ -48,7 +48,7 @@ export default function DashboardHeader() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6 text-gray-400">
-                <a href="#" className="hover:text-indigo-400 transition-colors duration-200">Dashboard</a>
+                <a href="/dashboard" className="hover:text-indigo-400 transition-colors duration-200">Dashboard</a>
                 <a href="#" className="hover:text-indigo-400 transition-colors duration-200">History</a>
                 <a href="#" className="hover:text-indigo-400 transition-colors duration-200">Settings</a>
             </nav>

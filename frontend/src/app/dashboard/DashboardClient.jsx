@@ -32,7 +32,7 @@ export default function DashboardClient() {
                     <h1 className="text-lg font-semibold text-gray-50">Quick Actions</h1>
                 </div>
                 <div className="flex flex-col gap-4">
-                    <button onClick={() => router.push('/interview')} className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition-colors duration-200 flex items-center gap-2">
+                    <button onClick={() => router.push('/create_interview')} className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition-colors duration-200 flex items-center gap-2">
                         <Mic size={16} />
                         Start New Interview
                     </button>
