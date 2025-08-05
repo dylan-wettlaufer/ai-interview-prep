@@ -4,15 +4,13 @@ import os
 from dotenv import load_dotenv
 from jose import JWTError, jwt
 from utils.supabase_client import supabase
-from schemas.auth import SignupRequest, LoginRequest
+from schemas.auth import SignupRequest, LoginRequest, User
 from datetime import datetime, timedelta
-from fastapi.responses import Response, JSONResponse
+from fastapi.responses import JSONResponse
 
 load_dotenv()
 
 router = APIRouter()
-
-
 
 # JWT Configuration
 SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key")
@@ -86,7 +84,7 @@ async def login(data: LoginRequest):
     print(f"Login SUCCESSFUL! User ID: {login_response.user.id}")
     
     # Step 3: Create a JWT and set the cookie
-    access_token = create_access_token(data.email)
+    access_token = create_access_token(login_response.user.id)
     
     response = JSONResponse(content={"message": "Login successful"})
     response.set_cookie(
@@ -115,59 +113,46 @@ async def get_user():
     response = supabase.auth.get_user()
     return response
 
-# Protected route example
-def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        return email
+        user_id: str = payload.get("sub")
+        
+        if user_id is None:
+            raise credentials_exception
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise credentials_exception
+    
+    # Query the database to get the full user object
+    try:
+        print("hi")
+        response = supabase.table("user").select("*").eq("id", user_id).execute()
+        user_data = response.data[0]
+        
+        if user_data is None:
+            raise credentials_exception
+        
+        # Return the Pydantic User model
+        return User(**user_data)
+        
+    except Exception:
+        raise credentials_exception
 
-def create_access_token(email: str):
+def create_access_token(user_id: str):
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
-        "sub": email,
+        "sub": user_id,
         "exp": expire
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
 @router.get("/protected")
-async def protected_route(current_user: str = Depends(get_current_user)):
+async def protected_route(current_user: User = Depends(get_current_user)):
     return {"message": f"Hello {current_user}, this is a protected route!"}
 
-
-
-@router.get("/test-login")
-async def test_login():
-    """
-    A simple endpoint to test if cookies can be set.
-    """
-    # Create a dummy access token.
-    access_token = create_access_token("test-user@example.com")
-    
-    response = JSONResponse(content={"message": "Test login successful"})
-    
-    # Set the cookie with the most relaxed settings for testing.
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=False,  # Set to False to check from the browser's console
-        secure=False,   # Set to False for HTTP
-        samesite="None", # Set to None for maximum compatibility
-        max_age=3600,
-        path="/"
-    )
-    
-    return response
