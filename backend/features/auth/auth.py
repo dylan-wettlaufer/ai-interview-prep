@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
@@ -84,7 +84,7 @@ async def login(data: LoginRequest):
     print(f"Login SUCCESSFUL! User ID: {login_response.user.id}")
     
     # Step 3: Create a JWT and set the cookie
-    access_token = create_access_token(login_response.user.id)
+    access_token = login_response.session.access_token
     
     response = JSONResponse(content={"message": "Login successful"})
     response.set_cookie(
@@ -113,46 +113,45 @@ async def get_user():
     response = supabase.auth.get_user()
     return response
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def get_current_user(request: Request):
+    """
+    Dependency to get the current user by verifying the JWT from the cookie.
+    Raises an HTTPException if the token is invalid or missing.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    # Query the database to get the full user object
-    try:
-        print("hi")
-        response = supabase.table("user").select("*").eq("id", user_id).execute()
-        user_data = response.data[0]
-        
-        if user_data is None:
-            raise credentials_exception
-        
-        # Return the Pydantic User model
-        return User(**user_data)
-        
-    except Exception:
-        raise credentials_exception
+        # Use Supabase's get_user method to verify the JWT and get user info.
+        # This is the key to using auth.uid in RLS.
+        user_response = supabase.auth.get_user(token)
+        if user_response and user_response.user:
+            return user_response.user
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except Exception as e:
+        # The Supabase client raises exceptions on invalid tokens
+        print(f"Token verification error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-def create_access_token(user_id: str):
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {
-        "sub": user_id,
-        "exp": expire
-    }
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-    return token
 
 @router.get("/protected")
-async def protected_route(current_user: User = Depends(get_current_user)):
-    return {"message": f"Hello {current_user}, this is a protected route!"}
+async def protected_route(current_user: dict = Depends(get_current_user)):
+    return {
+        "message": "This is a protected route!",
+        "user_email": current_user.email,
+        "user_uid": current_user.id
+    }
 

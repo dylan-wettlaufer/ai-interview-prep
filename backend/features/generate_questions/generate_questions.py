@@ -4,9 +4,11 @@ import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 import json
-from utils.supabase_client import supabase
+from utils.supabase_client import get_authenticated_sb
 from features.auth.auth import get_current_user
-from schemas.auth import User
+from supabase import Client
+
+
 
 load_dotenv()
 
@@ -14,12 +16,32 @@ genai.configure(api_key=os.getenv("API_KEY")) # get api key
 
 router = APIRouter()
 
+@router.post("/test")
+async def test(request: InterviewRequest, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+    try:
+
+        # Rest of your existing code
+        data_to_insert = {
+            "user_id": user.id,
+            "job_type": request.jobType,
+            "interview_type": request.interviewType,
+            "interview_source": "Basic",
+        }
+        
+        response = sb.table("interview").insert(data_to_insert).execute()
+        
+        return {"message": "Interview created successfully", "interview_id": response.data[0]['id']}
+    
+    except Exception as e:
+        print(f"Insertion Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create interview")
+    
+
 @router.post("/generate-questions")
-async def generate_questions(request: InterviewRequest, user: User = Depends(get_current_user)):
+async def generate_questions(request: InterviewRequest, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
 
     job = request.jobType
     interview = request.interviewType
-    print(user)
 
     # The text prompt is now simpler, as the schema will enforce the format.
     prompt = f"Generate 5 {interview} interview questions for a {job} role."
@@ -51,14 +73,14 @@ async def generate_questions(request: InterviewRequest, user: User = Depends(get
 
             try:
                 data_to_insert = {
-                    "job_type": job,
-                    "interview_type": interview,
-                    "questions": questions_json,
-                    "user_id": str(user.id),  # Convert UUID to string
-                    "interview_source": "Basic"
+                    "user_id": user.id,
+                    "job_type": request.jobType,
+                    "interview_type": request.interviewType,
+                    "interview_source": "Basic",
+                    "questions": questions_json
                 }
                 
-                response = supabase.table("interview").insert(data_to_insert).execute()
+                response = sb.table("interview").insert(data_to_insert).execute()
 
                 interview_id = response.data[0]['id'] if response.data else None
                 return {"questions": questions_json, "interview_id": interview_id}
