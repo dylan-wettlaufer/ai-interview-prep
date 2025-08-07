@@ -1,13 +1,24 @@
 "use client";
+import {useState, useEffect} from "react";
 import DashboardHeader from "../../dashboard/components/DashboardHeader";
 import InterviewStartScreen from "./components/InterviewStartScreen";
 import InterviewStartScreenSkeleton from "./components/InterviewStartScreenSkeleton";
-import {useState, useEffect} from "react";
+import InterviewQuestion from "./components/InterviewQuestion"
+
 
 
 export default function InterviewClient({ interview_id }) {
 
     const [interview, setInterview] = useState(null);
+    const [interviewState, setInterviewState] = useState(0);
+
+    const handleStartInterview = () => {
+        setInterviewState(1);
+    };
+
+    const handleReturnToDashboard = () => {
+        setInterviewState(0);
+    };
 
     useEffect(() => {
         const fetchInterview = async () => {
@@ -38,15 +49,35 @@ export default function InterviewClient({ interview_id }) {
 }, [interview_id]);
 
 
+    // Use a variable to store the content to be rendered,
+    // determined by a switch statement outside of the return.
+    let content;
+    switch (interviewState) {
+        case 0:
+            content = interview ? (
+                <InterviewStartScreen
+                    interview={interview}
+                    onStart={handleStartInterview}
+                    onReturn={handleReturnToDashboard}
+                />
+            ) : (
+                <InterviewStartScreenSkeleton />
+            );
+            break;
+        case 1:
+            content = <InterviewQuestion interview={interview} question={interview.questions[interviewState-1].question} question_number={interviewState} />;
+            break;
+        default:
+            content = <InterviewStartScreen interview={interview} />;
+    }
+
     return (
         <div className=" bg-neutral-900 text-white font-inter">
             <DashboardHeader />
 
-            {interview ? (
-                <InterviewStartScreen interview={interview} />
-            ) : (
-                <InterviewStartScreenSkeleton />
-            )}
+            {/* render the content variable */}
+            {content}
+
         </div>
     );
 }

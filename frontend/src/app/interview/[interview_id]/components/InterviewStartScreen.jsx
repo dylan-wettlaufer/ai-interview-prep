@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 
-export default function InterviewStartScreen({ interview }) {
+export default function InterviewStartScreen({ interview, onStart, onReturn }) {
 
     return (
 
@@ -48,10 +48,10 @@ export default function InterviewStartScreen({ interview }) {
                         <div className="flex flex-col justify-start items-start gap-2 mt-2 w-full"> {/* Added w-full to ensure this section takes full available width */}
                             <h1 className="text-gray-100 text-left text-xl font-bold mb-4">Ready to Start?</h1>
                             <div className="flex flex-row gap-6 w-full"> {/* Added w-full to make the row of buttons span full width */}
-                                <button className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 cursor-pointer rounded-lg transition-colors flex-1">
+                                <button onClick={onStart} className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 cursor-pointer rounded-lg transition-colors flex-1">
                                     <Play size={16} /> Start Interview
                                 </button>
-                                <button className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg transition-colors flex-1 cursor-pointer">
+                                <button onClick={onReturn} className="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white bg-neutral-700 hover:bg-neutral-600 border border-neutral-600 rounded-lg transition-colors flex-1 cursor-pointer">
                                     <ArrowLeft size={16} /> Return to Dashboard
                                 </button>
                             </div>
