@@ -119,7 +119,6 @@ def get_current_user(request: Request):
     Raises an HTTPException if the token is invalid or missing.
     """
     token = request.cookies.get("access_token")
-  
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
