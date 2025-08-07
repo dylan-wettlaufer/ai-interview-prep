@@ -10,7 +10,15 @@ import InterviewQuestion from "./components/InterviewQuestion"
 export default function InterviewClient({ interview_id }) {
 
     const [interview, setInterview] = useState(null);
-    const [interviewState, setInterviewState] = useState(0);
+
+    // Use local storage to persist interview state
+    const [interviewState, setInterviewState] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const savedState = localStorage.getItem('interviewState');
+            return savedState ? parseInt(savedState, 10) : 0;
+        }
+        return 0;
+    });
 
     const handleStartInterview = () => {
         setInterviewState(1);
@@ -19,6 +27,13 @@ export default function InterviewClient({ interview_id }) {
     const handleReturnToDashboard = () => {
         setInterviewState(0);
     };
+
+    // Save interview state to local storage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('interviewState', interviewState.toString());
+        }
+    }, [interviewState]);
 
     useEffect(() => {
         const fetchInterview = async () => {
@@ -65,7 +80,11 @@ export default function InterviewClient({ interview_id }) {
             );
             break;
         case 1:
-            content = <InterviewQuestion interview={interview} question={interview.questions[interviewState-1].question} question_number={interviewState} />;
+            content = interview ? (
+                <InterviewQuestion interview={interview} question={interview.questions[interviewState-1].question} question_number={interviewState} />
+            ) : (
+                <InterviewStartScreenSkeleton />
+            );
             break;
         default:
             content = <InterviewStartScreen interview={interview} />;
