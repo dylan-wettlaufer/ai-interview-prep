@@ -3,32 +3,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Clock, Mic, Type, MicOff } from "lucide-react"
+import { Clock, Mic, Type, MicOff, ArrowLeft, ArrowRight } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import InterviewFeedback from "./InterviewFeedback"
+import { motion, AnimatePresence } from "framer-motion";
+
 
 // Define the maximum recording time in seconds
 const MAX_RECORDING_TIME = 120; // 2 minutes
 
-export default function InterviewQuestion({ interview, question, question_number }) {
-    const [isAnimating, setIsAnimating] = useState(true);
+export default function InterviewQuestion({ interview, question, question_number, onNext, onPrevious }) {
+    
     const [interviewState, setInterviewState] = useState("question");
     const [textAnswer, setTextAnswer] = useState("")
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const [audioURL, setAudioURL] = useState(null);
+    const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
 
     // Using a ref to hold the MediaRecorder and audio chunks, so they don't trigger re-renders
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
 
-    // useEffect to handle the animation
-    useEffect(() => {
-        setIsAnimating(true);
-        const timer = setTimeout(() => {
-            setIsAnimating(false);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, []);
+    
 
     // Timer for recording duration
     useEffect(() => {
@@ -91,143 +88,256 @@ export default function InterviewQuestion({ interview, question, question_number
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
-            setInterviewState('question');
+            setInterviewState('completed');
+            setIsAnswerSubmitted(true);
         }
     };
 
+    const handleNextQuestion = () => {
+        // We now call the onNext function directly to update the state and trigger
+        // the new question to render. The useEffect will handle the entrance animation.
+        if (question_number < interview.questions.length) {
+            onNext();
+            setInterviewState('question');
+            setRecordingTime(0);
+            setTextAnswer("");
+            setIsAnswerSubmitted(false);
+        }
+    };
+
+    const handlePreviousQuestion = () => {
+        // Same logic as handleNextQuestion, calling onPrevious directly.
+        onPrevious();
+        setInterviewState('question');
+        setRecordingTime(0);
+        setTextAnswer("");
+        setIsAnswerSubmitted(false);
+       
+    };
+
+     // Animation variants
+    const fadeUp = {
+        hidden: { opacity: 0, y: 20, scale: 0.98 },
+        visible: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, y: -20, scale: 0.98 },
+    };
     
     return (
-        <div className="container h-screen w-screen mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
-                <Card className={`mb-8 bg-neutral-800 border border-neutral-600 transition-all duration-500 ease-out ${
-                    isAnimating 
-                    ? 'opacity-0 transform translate-y-8 scale-95' 
-                    : 'opacity-100 transform translate-y-0 scale-100'
-                    }`}>
-                    <CardHeader>
+        <div className="container min-h-screen mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Question Card */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`question-${question_number}`}
+                variants={fadeUp}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                transition={{ duration: 0.4 }}
+              >
+                <Card className="mb-8 bg-neutral-800 border border-neutral-600">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle className={`text-lg transition-all text-gray-100 duration-700 delay-200 ${
-                        isAnimating ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
-                        }`}>
+                      <CardTitle className="text-lg text-gray-100">
                         Question {question_number}
-                        </CardTitle>
-                        <Badge variant="outline" className={`bg-neutral-700 flex items-center space-x-1 transition-all duration-700 delay-300 text-gray-100 ${
-                        isAnimating ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'
-                        }`}>
+                      </CardTitle>
+                      <Badge
+                        variant="outline"
+                        className="bg-neutral-700 flex items-center space-x-1 text-gray-100"
+                      >
                         <Clock className="h-4 w-4" />
                         <span>2:00</span>
-                        </Badge>
+                      </Badge>
                     </div>
-                    </CardHeader>
-                    <CardContent>
-                    <p className={`text-xl text-gray-100 leading-relaxed transition-all duration-700 delay-400 ${
-                        isAnimating ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-                    }`}>
-                        {question}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xl text-gray-100 leading-relaxed">
+                      {question}
                     </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </AnimatePresence>
+    
+            {/* States */}
+            <AnimatePresence mode="wait">
+              {interviewState === "question" && (
+                <motion.div
+                  key="question-options"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
+                  <Card>
+                    <CardContent className="pt-6 text-center space-y-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        Choose how you'd like to answer
+                      </h3>
+                      <p className="text-gray-600">
+                        You can record your voice response or type your answer
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+                        <Button onClick={startRecording} className="flex-1 h-12">
+                          <Mic className="h-5 w-5 mr-2" />
+                          Record Answer
+                        </Button>
+                        <Button
+                          onClick={() => setInterviewState("typing")}
+                          variant="outline"
+                          className="flex-1 h-12 bg-transparent"
+                        >
+                          <Type className="h-4 w-4 mr-2" />
+                          Type Answer
+                        </Button>
+                      </div>
                     </CardContent>
-                </Card>
-
-                {interviewState === 'question' && (
-                <Card className={`transition-all duration-500 delay-500 ease-out ${
-                isAnimating 
-                    ? 'opacity-0 transform translate-y-8' 
-                    : 'opacity-100 transform translate-y-0'
-                }`}>
-                <CardContent className="pt-6">
-                    <div className="text-center space-y-6">
-                    <div className={`transition-all duration-700 delay-600 ${
-                        isAnimating ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-                    }`}>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Choose how you'd like to answer</h3>
-                        <p className="text-gray-600">You can record your voice response or type your answer</p>
-                    </div>
-                    
-                    <div className={`flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto transition-all duration-700 delay-700 ${
-                        isAnimating ? 'opacity-0 transform translate-y-4' : 'opacity-100 transform translate-y-0'
-                    }`}>
-                        <Button onClick={startRecording} className="flex-1 h-12 cursor-pointer">
-                        <Mic className="h-5 w-5 mr-2" />
-                        Record Answer
-                        </Button>
-                        <Button onClick={() => setInterviewState('typing')} variant="outline" className="flex-1 h-12 bg-transparent cursor-pointer">
-                        <Type className="h-4 w-4 mr-2" />
-                        Type Answer
-                        </Button>
-                    </div>
-                    </div>
-                </CardContent>
-                </Card>
-            )}
-
-            {/* Typing State */}
-            {interviewState === 'typing' && (
-                <Card>
-                <CardContent className="pt-4">
-                    <div className="space-y-6">
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Type your answer</h3>
-                        <p className="text-gray-600 mb-4">Write a detailed response to the question above</p>
+                  </Card>
+                </motion.div>
+              )}
+    
+              {interviewState === "typing" && (
+                <motion.div
+                  key="typing"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.4 }}
+                >
+                  <Card>
+                    <CardContent className="pt-4 space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          Type your answer
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          Write a detailed response to the question above
+                        </p>
                         <Textarea
-                        placeholder="Start typing your answer here..."
-                        value={textAnswer}
-                        onChange={(e) => setTextAnswer(e.target.value)}
-                        className="min-h-[200px] text-base"
+                          placeholder="Start typing your answer here..."
+                          value={textAnswer}
+                          onChange={(e) => setTextAnswer(e.target.value)}
+                          className="min-h-[200px] text-base"
                         />
-                    </div>
-                    
-                    <div className="flex gap-4">
-                        <Button 
-                        onClick={() => setInterviewState('question')} 
-                        variant="outline"
-                        className="bg-transparent"
+                      </div>
+                      <div className="flex gap-4">
+                        <Button
+                          onClick={() => setInterviewState("question")}
+                          variant="outline"
+                          className="bg-transparent"
                         >
-                        Back
-                        </Button> 
-                        <Button 
-                        disabled={!textAnswer.trim()}
-                        className="flex-1"
-                        >
-                        Submit Answer
+                          Back
                         </Button>
-                    </div>
-                    </div>
-                </CardContent>
-                </Card>
-            )}
-
-            {/* Recording State */}
-            {interviewState === 'recording' && (
-                <Card>
-                <CardContent className="pt-6">
-                    <div className="text-center space-y-6">
-                    <div className="flex items-center justify-center">
+                        <Button
+                          disabled={!textAnswer.trim()}
+                          className="flex-1"
+                          onClick={() => {
+                            setIsAnswerSubmitted(true);
+                            setInterviewState("completed");
+                          }}
+                        >
+                          Submit Answer
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+    
+              {interviewState === "recording" && (
+                <motion.div
+                  key="recording"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.4 }}
+                >
+                  <Card>
+                    <CardContent className="pt-6 text-center space-y-6">
+                      <div className="flex items-center justify-center">
                         <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center">
-                        <div className="w-6 h-6 bg-red-500 rounded-full animate-pulse"></div>
+                          <div className="w-6 h-6 bg-red-500 rounded-full animate-pulse"></div>
                         </div>
-                    </div>
-                    
-                    <div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">Recording in progress...</h3>
-                        <div className="text-3xl font-mono text-red-600 mb-2">
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        Recording in progress...
+                      </h3>
+                      <div className="text-3xl font-mono text-red-600">
                         {formatTime(recordingTime)}
-                        </div>
-                        <p className="text-gray-600">Speak clearly and take your time</p>
-                    </div>
-
-                    <div className="flex gap-4 justify-center">
-                        <Button onClick={stopRecording} variant="destructive" size="lg" className="cursor-pointer">
-                        <MicOff className="h-5 w-5 mr-2" />
-                        Stop Recording
+                      </div>
+                      <p className="text-gray-600">
+                        Speak clearly and take your time
+                      </p>
+                      <div className="flex justify-center">
+                        <Button
+                          onClick={stopRecording}
+                          variant="destructive"
+                          size="lg"
+                        >
+                          <MicOff className="h-5 w-5 mr-2" />
+                          Stop Recording
                         </Button>
-                    </div>
-                    </div>
-                </CardContent>
-                </Card>
-            )}
-
-            </div>
-            
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+    
+              {interviewState === "completed" && (
+                <motion.div
+                  key="completed"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.4 }}
+                >
+                  <InterviewFeedback
+                    question_number={question_number}
+                    num_questions={interview.questions.length}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+    
+          {/* Navigation */}
+          <AnimatePresence>
+            <motion.div
+              key="navigation"
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.4, delay: 0.4 }}
+              className="mt-8 flex justify-between items-center max-w-4xl mx-auto"
+            >
+              <Button
+                onClick={handlePreviousQuestion}
+                variant="outline"
+                className="bg-transparent"
+                disabled={interviewState === "recording" || interviewState === "typing"}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                {question_number > 1 ? "Previous Question" : "Return to Start"}
+              </Button>
+              <Button
+                className={`bg-indigo-500 ${
+                  isAnswerSubmitted ? "cursor-pointer" : "cursor-not-allowed"
+                }`}
+                onClick={handleNextQuestion}
+                disabled={!isAnswerSubmitted}
+              >
+                {question_number < interview.questions.length
+                  ? "Next Question"
+                  : "Complete Interview"}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </motion.div>
+          </AnimatePresence>
         </div>
-    );
+      );
 }

@@ -24,6 +24,14 @@ export default function InterviewClient({ interview_id }) {
         setInterviewState(1);
     };
 
+    const handleNextQuestion = () => {
+        setInterviewState(interviewState + 1);
+    };
+
+    const handlePreviousQuestion = () => {
+        setInterviewState(interviewState - 1);
+    };
+
     const handleReturnToDashboard = () => {
         setInterviewState(0);
     };
@@ -81,11 +89,67 @@ export default function InterviewClient({ interview_id }) {
             break;
         case 1:
             content = interview ? (
-                <InterviewQuestion interview={interview} question={interview.questions[interviewState-1].question} question_number={interviewState} />
+                <InterviewQuestion 
+                interview={interview} 
+                question={interview.questions[interviewState-1].question} 
+                question_number={interviewState} 
+                onNext={handleNextQuestion} 
+                onPrevious={handlePreviousQuestion}/>
             ) : (
                 <InterviewStartScreenSkeleton />
             );
             break;
+        case 2:
+            content = interview ? (
+                <InterviewQuestion 
+                interview={interview} 
+                question={interview.questions[interviewState-1].question} 
+                question_number={interviewState} 
+                onNext={handleNextQuestion} 
+                onPrevious={handlePreviousQuestion}/>
+            ) : (
+                <InterviewStartScreenSkeleton />
+            );
+            break;
+        
+        case 3:
+            content = interview ? (
+                <InterviewQuestion 
+                interview={interview} 
+                question={interview.questions[interviewState-1].question} 
+                question_number={interviewState} 
+                onNext={handleNextQuestion} 
+                onPrevious={handlePreviousQuestion}/>
+            ) : (
+                <InterviewStartScreenSkeleton />
+            );
+            break;
+
+        case 4:
+            content = interview ? (
+                <InterviewQuestion 
+                interview={interview} 
+                question={interview.questions[interviewState-1].question} 
+                question_number={interviewState} 
+                onNext={handleNextQuestion} 
+                onPrevious={handlePreviousQuestion}/>
+            ) : (
+                <InterviewStartScreenSkeleton />
+            );
+            break;
+        case 5:
+            content = interview ? (
+                <InterviewQuestion 
+                interview={interview} 
+                question={interview.questions[interviewState-1].question} 
+                question_number={interviewState} 
+                onNext={handleNextQuestion} 
+                onPrevious={handlePreviousQuestion}/>
+            ) : (
+                <InterviewStartScreenSkeleton />
+            );
+            break;
+        
         default:
             content = <InterviewStartScreen interview={interview} />;
     }

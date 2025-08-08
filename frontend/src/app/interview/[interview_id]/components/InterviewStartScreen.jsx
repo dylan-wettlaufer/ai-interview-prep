@@ -9,7 +9,7 @@ export default function InterviewStartScreen({ interview, onStart, onReturn }) {
 
     return (
 
-            <div className="max-w-7xl w-screen h-screen overflow-y-auto mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl min-h-screen overflow-y-auto mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 
                 <div className="flex flex-col gap-8">
                     <div className="flex-1">
