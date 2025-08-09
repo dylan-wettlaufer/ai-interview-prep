@@ -179,7 +179,7 @@ export default function InterviewQuestion({ interview, question, question_number
                         You can record your voice response or type your answer
                       </p>
                       <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                        <Button onClick={startRecording} className="flex-1 h-12">
+                        <Button onClick={() => setInterviewState("recording")} className="flex-1 h-12">
                           <Mic className="h-5 w-5 mr-2" />
                           Record Answer
                         </Button>
@@ -271,7 +271,20 @@ export default function InterviewQuestion({ interview, question, question_number
                       <p className="text-gray-600">
                         Speak clearly and take your time
                       </p>
-                      <div className="flex justify-center">
+                      <div className="flex justify-center gap-4">
+
+                        {!isRecording && (
+                            <Button
+                            onClick={() => setInterviewState("question")}
+                            variant="outline"
+                            className="bg-transparent"
+                            size="lg"
+                          >
+                            Back
+                          </Button>
+                        )}
+
+                        {isRecording ? (
                         <Button
                           onClick={stopRecording}
                           variant="destructive"
@@ -280,6 +293,16 @@ export default function InterviewQuestion({ interview, question, question_number
                           <MicOff className="h-5 w-5 mr-2" />
                           Stop Recording
                         </Button>
+                        ) : (
+                        <Button
+                          onClick={startRecording}
+                          size="lg"
+                        >
+                          <Mic className="h-5 w-5 mr-2" />
+                          Start Recording
+                        </Button>
+                        )}
+
                       </div>
                     </CardContent>
                   </Card>
