@@ -7,10 +7,10 @@ import { CheckCircle, Star, SkipForward, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
-export default function InterviewFeedback({ question_number, num_questions }) {
+export default function InterviewFeedback({ question_number, num_questions, response }) {
 
     const [score, setScore] = useState(55);
-    const [userResponse, setUserResponse] = useState("This is a sample response.");
+    const [userResponse, setUserResponse] = useState(response);
     const [feedback, setFeedback] = useState("This is a sample feedback.");
 
     const getScoreBadgeVariant = (score) => {

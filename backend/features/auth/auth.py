@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
-from jose import JWTError, jwt
 from utils.supabase_client import supabase
 from schemas.auth import SignupRequest, LoginRequest, User
 from datetime import datetime, timedelta

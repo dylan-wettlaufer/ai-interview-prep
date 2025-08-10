@@ -21,10 +21,68 @@ export default function InterviewQuestion({ interview, question, question_number
     const [audioURL, setAudioURL] = useState(null);
     const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
 
+    // New state for speech-to-text
+    const [speechTranscript, setSpeechTranscript] = useState("");
+    const [finalTranscript, setFinalTranscript] = useState("");
+    const [isListening, setIsListening] = useState(false);
+
     // Using a ref to hold the MediaRecorder and audio chunks, so they don't trigger re-renders
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
+    const recognitionRef = useRef(null);
 
+
+    // Initialize speech recognition
+    useEffect(() => {
+      if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          recognitionRef.current = new SpeechRecognition();
+          
+          recognitionRef.current.continuous = true;
+          recognitionRef.current.interimResults = true;
+          recognitionRef.current.lang = 'en-US';
+
+          recognitionRef.current.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscriptPart = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscriptPart += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            // Update final transcript by appending new final results
+            if (finalTranscriptPart) {
+                setFinalTranscript(prev => prev + finalTranscriptPart);
+            }
+            
+            // Show combined final + interim transcript
+            setSpeechTranscript(prev => {
+                const currentFinal = finalTranscript + finalTranscriptPart;
+                return currentFinal + interimTranscript;
+            });
+        };
+
+          recognitionRef.current.onend = () => {
+              setIsListening(false);
+          };
+
+          recognitionRef.current.onerror = (event) => {
+              console.error('Speech recognition error:', event.error);
+              setIsListening(false);
+          };
+      }
+
+      return () => {
+          if (recognitionRef.current) {
+              recognitionRef.current.stop();
+          }
+      };
+  }, []);
     
 
     // Timer for recording duration
@@ -56,6 +114,9 @@ export default function InterviewQuestion({ interview, question, question_number
     // Function to start recording, called when the user clicks the "Record Answer" button
     const startRecording = async () => {
         setAudioURL(null); // Clear any previous recording
+        setSpeechTranscript("");
+        setFinalTranscript("");
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const mediaRecorder = new MediaRecorder(stream);
@@ -76,6 +137,13 @@ export default function InterviewQuestion({ interview, question, question_number
             setIsRecording(true);
             setRecordingTime(0);
             setInterviewState('recording');
+
+            // Start speech recognition
+            if (recognitionRef.current) {
+              recognitionRef.current.start();
+              setIsListening(true);
+          }
+
         } catch (err) {
             console.error("The following error occurred: " + err);
             // Handle error, e.g., show a message to the user
@@ -91,6 +159,12 @@ export default function InterviewQuestion({ interview, question, question_number
             setInterviewState('completed');
             setIsAnswerSubmitted(true);
         }
+
+        // Stop speech recognition
+        if (recognitionRef.current && isListening) {
+          recognitionRef.current.stop();
+          setIsListening(false);
+      }
     };
 
     const handleNextQuestion = () => {
@@ -101,6 +175,8 @@ export default function InterviewQuestion({ interview, question, question_number
             setInterviewState('question');
             setRecordingTime(0);
             setTextAnswer("");
+            setFinalTranscript("");
+            setSpeechTranscript("");
             setIsAnswerSubmitted(false);
         }
     };
@@ -111,6 +187,8 @@ export default function InterviewQuestion({ interview, question, question_number
         setInterviewState('question');
         setRecordingTime(0);
         setTextAnswer("");
+        setFinalTranscript("");
+        setSpeechTranscript("");
         setIsAnswerSubmitted(false);
        
     };
@@ -268,11 +346,23 @@ export default function InterviewQuestion({ interview, question, question_number
                       <div className="text-3xl font-mono text-red-600">
                         {formatTime(recordingTime)}
                       </div>
+
+                      {/* Real-time transcript display */}
+                      {isListening && (
+                        <div className="bg-gray-50 p-4 rounded-lg border max-h-40 overflow-y-auto">
+                          <p className="text-sm text-gray-600 mb-2">Live transcript:</p>
+                          {speechTranscript && (
+                            <p className="text-gray-800">{speechTranscript}</p>
+                          )}
+                        </div>
+                      )}
+                      
                       <p className="text-gray-600">
                         Speak clearly and take your time
                       </p>
+                      
                       <div className="flex justify-center gap-4">
-
+                  
                         {!isRecording && (
                             <Button
                             onClick={() => setInterviewState("question")}
@@ -321,6 +411,7 @@ export default function InterviewQuestion({ interview, question, question_number
                   <InterviewFeedback
                     question_number={question_number}
                     num_questions={interview.questions.length}
+                    response={finalTranscript ? finalTranscript : textAnswer}
                   />
                 </motion.div>
               )}
@@ -341,7 +432,7 @@ export default function InterviewQuestion({ interview, question, question_number
               <Button
                 onClick={handlePreviousQuestion}
                 variant="outline"
-                className="bg-transparent"
+                className="bg-transparent disabled:cursor-not-allowed cursor-pointer"
                 disabled={interviewState === "recording" || interviewState === "typing"}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

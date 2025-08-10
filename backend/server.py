@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from features.auth.auth import router as auth_router
-from features.generate_questions.generate_questions import router as generate_questions_router
+from features.interview.generate_questions import router as generate_questions_router
 from utils.supabase_client import supabase
 from fastapi.middleware.cors import CORSMiddleware
 
