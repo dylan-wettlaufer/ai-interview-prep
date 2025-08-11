@@ -9,7 +9,6 @@ from features.auth.auth import get_current_user
 from supabase import Client
 
 
-
 load_dotenv()
 
 genai.configure(api_key=os.getenv("API_KEY")) # get api key
@@ -44,7 +43,7 @@ async def generate_questions(request: InterviewRequest, user: dict = Depends(get
     interview = request.interviewType
 
     # The text prompt is now simpler, as the schema will enforce the format.
-    prompt = f"Generate 5 {interview} interview questions for a {job} role."
+    prompt = f"Generate 3 {interview} interview questions for a {job} role."
     
     try:
         model = genai.GenerativeModel(
