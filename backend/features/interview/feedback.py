@@ -7,7 +7,7 @@ import json
 from utils.supabase_client import get_authenticated_sb
 from features.auth.auth import get_current_user
 from supabase import Client
-from schemas.feedback import FeedbackRequest, FeedbackResponse
+from schemas.feedback import FeedbackRequest, FeedbackResponse, AllFeedbackResponse, FeedbackItem
 
 load_dotenv()
 
@@ -15,7 +15,7 @@ genai.configure(api_key=os.getenv("API_KEY"))
 
 router = APIRouter()
 
-@router.post("/response", response_model=FeedbackResponse)
+@router.post("/response", response_model=FeedbackItem)
 async def response(request: FeedbackRequest, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     try:
         interview_id = request.interview_id
@@ -54,6 +54,7 @@ async def response(request: FeedbackRequest, user: dict = Depends(get_current_us
             - Provide specific examples when pointing out issues
             - Maintain a professional, encouraging tone
             - Provide exactly 3 improvement suggestions
+            - Always try to be friendly in tone and provide constructive feedback without being harsh.
 
             Analyze the response and return your evaluation.
                     """
@@ -122,16 +123,20 @@ async def response(request: FeedbackRequest, user: dict = Depends(get_current_us
 
             try:
                 db_response = sb.table("feedback").insert(data_to_insert).execute()
+
+                feedback_by_question = {
+
+                    "overall_score": feedback_json["overall_score"],
+                    "content_quality": feedback_json["content_quality"],
+                    "clarity": feedback_json["clarity"],
+                    "completeness": feedback_json["completeness"],
+                    "positive_feedback": feedback_json["positive_feedback"],
+                    "negative_feedback": feedback_json["negative_feedback"],
+                    "improvement_suggestions": feedback_json["improvement_suggestions"]
+                }
                 
-                return FeedbackResponse(
-                    overall_score=feedback_json["overall_score"],
-                    content_quality=feedback_json["content_quality"],
-                    clarity=feedback_json["clarity"],
-                    completeness=feedback_json["completeness"],
-                    positive_feedback=feedback_json["positive_feedback"],
-                    negative_feedback=feedback_json["negative_feedback"],
-                    improvement_suggestions=feedback_json["improvement_suggestions"]
-                )
+                return FeedbackItem(feedback=feedback_by_question, response=response)
+
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
@@ -142,3 +147,35 @@ async def response(request: FeedbackRequest, user: dict = Depends(get_current_us
         raise HTTPException(status_code=500, detail=f"Failed to parse AI response as JSON: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+
+@router.get("/response/{interview_id}/all", response_model=AllFeedbackResponse)
+async def get_all_responses(interview_id: str, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+    try:
+        response = sb.table("feedback").select("*").eq("interview_id", interview_id).execute()
+        
+        # Transform the data into the required format
+        feedback_by_question = {}
+        
+        for record in response.data:
+            question_number = str(record["question_number"])  # Convert to string key
+            feedback_by_question[question_number] = {
+                "feedback": {
+                    "overall_score": record["overall_score"],
+                    "content_quality": record["content_quality_score"],
+                    "clarity": record["clarity_score"],
+                    "completeness": record["completeness_score"],
+                    "positive_feedback": record["positive_feedback"],
+                    "negative_feedback": record["negative_feedback"],
+                    "improvement_suggestions": record["improvement_suggestions"]
+                },
+                "response": record["user_response"]
+            }
+
+            # sort feedback_by_question by question_number
+            feedback_by_question = dict(sorted(feedback_by_question.items(), key=lambda item: int(item[0])))
+        
+        return AllFeedbackResponse(feedback_by_question=feedback_by_question)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")

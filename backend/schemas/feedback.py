@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Dict
 
 class FeedbackRequest(BaseModel):
     interview_id: str = Field(..., description="The id of the interview")
@@ -16,3 +17,12 @@ class FeedbackResponse(BaseModel):
     positive_feedback: str
     negative_feedback: str
     improvement_suggestions: list[str]
+
+
+class FeedbackItem(BaseModel):
+    feedback: dict  # or create a specific feedback model
+    response: str
+
+# Then create the response model for all feedback
+class AllFeedbackResponse(BaseModel):
+    feedback_by_question: Dict[str, FeedbackItem]

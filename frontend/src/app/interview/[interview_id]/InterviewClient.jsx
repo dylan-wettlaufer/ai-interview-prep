@@ -10,6 +10,7 @@ import InterviewQuestion from "./components/InterviewQuestion"
 export default function InterviewClient({ interview_id }) {
 
     const [interview, setInterview] = useState(null);
+    const [allFeedback, setAllFeedback] = useState(null);
 
     // Use local storage to persist interview state
     const [interviewState, setInterviewState] = useState(() => {
@@ -43,6 +44,7 @@ export default function InterviewClient({ interview_id }) {
         }
     }, [interviewState]);
 
+    // Fetch interview data
     useEffect(() => {
         const fetchInterview = async () => {
             try {
@@ -59,7 +61,6 @@ export default function InterviewClient({ interview_id }) {
             }
             
             const data = await response.json();
-            console.log(data);
             setInterview(data);
         } catch (error) {
             console.error('Fetch error:', error);
@@ -71,6 +72,70 @@ export default function InterviewClient({ interview_id }) {
     }
 }, [interview_id]);
 
+    // Fetch feedback data
+    useEffect(() => {
+        const fetchAllFeedback = async () => {
+            try {
+                const response = await fetch(`http://localhost:8000/feedback-ai/response/${interview_id}/all`, {
+                    method: 'GET',
+                    headers: {
+                    'Content-Type': 'application/json',  
+                },
+                credentials: 'include',
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setAllFeedback(data); // This will include the nested structure
+            }
+        } catch (error) {
+            console.error('Error fetching feedback:', error);
+        }
+        };
+        
+        if (interview_id) {
+            fetchAllFeedback();
+        }
+      }, [interview_id]);
+
+      // adds newly added feedback to the existing feedback so that it appears in the current session
+      const handleFeedbackGenerated = (questionNumber, feedbackData) => {
+        setAllFeedback(prev => {
+          // Initialize with empty object if prev is null
+          const current = prev || { feedback_by_question: {} };
+          return {
+            ...current,
+            feedback_by_question: {
+              ...(current.feedback_by_question || {}),
+              [questionNumber]: {
+                feedback: feedbackData.feedback,
+                response: feedbackData.response
+              }
+            }
+          };
+        });
+      };
+
+    // Helper function to get existing feedback for a specific question
+    const getExistingFeedback = (questionNumber) => {
+        return allFeedback?.feedback_by_question?.[questionNumber] || null;
+    };
+
+    // Helper function to render interview question
+    const renderInterviewQuestion = (questionIndex) => {
+        
+        return (
+            <InterviewQuestion 
+                interview={interview} 
+                question={interview.questions[questionIndex].question} 
+                question_number={questionIndex + 1} 
+                onNext={handleNextQuestion} 
+                onPrevious={handlePreviousQuestion}
+                existingFeedback={getExistingFeedback(questionIndex + 1)}
+                onFeedbackGenerated={handleFeedbackGenerated}
+            />
+        );
+    };
 
     // Use a variable to store the content to be rendered,
     // determined by a switch statement outside of the return.
@@ -88,71 +153,24 @@ export default function InterviewClient({ interview_id }) {
             );
             break;
         case 1:
-            content = interview ? (
-                <InterviewQuestion 
-                interview={interview} 
-                question={interview.questions[interviewState-1].question} 
-                question_number={interviewState} 
-                onNext={handleNextQuestion} 
-                onPrevious={handlePreviousQuestion}/>
-            ) : (
-                <InterviewStartScreenSkeleton />
-            );
+            content = interview && allFeedback ? renderInterviewQuestion(0) : <InterviewStartScreenSkeleton />;
             break;
         case 2:
-            content = interview ? (
-                <InterviewQuestion 
-                interview={interview} 
-                question={interview.questions[interviewState-1].question} 
-                question_number={interviewState} 
-                onNext={handleNextQuestion} 
-                onPrevious={handlePreviousQuestion}/>
-            ) : (
-                <InterviewStartScreenSkeleton />
-            );
+            content = interview && allFeedback ? renderInterviewQuestion(1) : <InterviewStartScreenSkeleton />;
             break;
-        
         case 3:
-            content = interview ? (
-                <InterviewQuestion 
-                interview={interview} 
-                question={interview.questions[interviewState-1].question} 
-                question_number={interviewState} 
-                onNext={handleNextQuestion} 
-                onPrevious={handlePreviousQuestion}/>
-            ) : (
-                <InterviewStartScreenSkeleton />
-            );
+            content = interview && allFeedback ? renderInterviewQuestion(2) : <InterviewStartScreenSkeleton />;
             break;
-
         case 4:
-            content = interview ? (
-                <InterviewQuestion 
-                interview={interview} 
-                question={interview.questions[interviewState-1].question} 
-                question_number={interviewState} 
-                onNext={handleNextQuestion} 
-                onPrevious={handlePreviousQuestion}/>
-            ) : (
-                <InterviewStartScreenSkeleton />
-            );
+            content = interview && allFeedback ? renderInterviewQuestion(3) : <InterviewStartScreenSkeleton />;
             break;
         case 5:
-            content = interview ? (
-                <InterviewQuestion 
-                interview={interview} 
-                question={interview.questions[interviewState-1].question} 
-                question_number={interviewState} 
-                onNext={handleNextQuestion} 
-                onPrevious={handlePreviousQuestion}/>
-            ) : (
-                <InterviewStartScreenSkeleton />
-            );
+            content = interview && allFeedback ? renderInterviewQuestion(4) : <InterviewStartScreenSkeleton />;
             break;
-        
         default:
             content = <InterviewStartScreen interview={interview} />;
     }
+
 
     return (
         <div className=" bg-neutral-900 text-white font-inter">

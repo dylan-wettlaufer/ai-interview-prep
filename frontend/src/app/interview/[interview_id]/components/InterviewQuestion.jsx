@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Clock, Mic, Type, MicOff, ArrowLeft, ArrowRight } from "lucide-react"
+import { Clock, Mic, Type, MicOff, ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import InterviewFeedback from "./InterviewFeedback"
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,14 +12,17 @@ import { motion, AnimatePresence } from "framer-motion";
 // Define the maximum recording time in seconds
 const MAX_RECORDING_TIME = 120; // 2 minutes
 
-export default function InterviewQuestion({ interview, question, question_number, onNext, onPrevious }) {
+export default function InterviewQuestion({ interview, question, question_number, onNext, onPrevious, existingFeedback, onFeedbackGenerated }) {
     
-    const [interviewState, setInterviewState] = useState("question");
+    const [interviewState, setInterviewState] = useState("");
     const [textAnswer, setTextAnswer] = useState("")
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const [audioURL, setAudioURL] = useState(null);
-    const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
+    const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(existingFeedback ? true : false);
+    const [feedback, setFeedback] = useState(null);
+    const [existingResponse, setExistingResponse] = useState("");
+
 
     // New state for speech-to-text
     const [speechTranscript, setSpeechTranscript] = useState("");
@@ -31,6 +34,43 @@ export default function InterviewQuestion({ interview, question, question_number
     const audioChunksRef = useRef([]);
     const recognitionRef = useRef(null);
 
+    // Update state when existingFeedback prop changes (when navigating between questions)
+    useEffect(() => {
+        if (existingFeedback) {
+            console.log("existingFeedback1", existingFeedback.feedback);
+            setFeedback(existingFeedback.feedback);
+            setExistingResponse(existingFeedback.response || "");
+            setIsAnswerSubmitted(true);
+            setInterviewState("completed");
+        } else {
+            setInterviewState("question");
+            setExistingResponse("");
+        }
+    }, [existingFeedback]);
+
+    // Update state when existingFeedback prop changes (when navigating between questions)
+    useEffect(() => {
+        if (existingFeedback) {
+            console.log("existingFeedback2", existingFeedback.feedback);
+            setFeedback(existingFeedback.feedback);
+            setExistingResponse(existingFeedback.response || "");
+            setIsAnswerSubmitted(true);
+            setInterviewState("completed");
+        } else {
+            setFeedback(null);
+            setIsAnswerSubmitted(false);
+            setInterviewState("question");
+            setExistingResponse("");
+        }
+        
+        // Reset input states when navigating
+        setTextAnswer("");
+        setFinalTranscript("");
+        setSpeechTranscript("");
+        setRecordingTime(0);
+        setIsRecording(false);
+        setIsListening(false);
+    }, [existingFeedback, question_number]);
 
     // Initialize speech recognition
     useEffect(() => {
@@ -104,6 +144,57 @@ export default function InterviewQuestion({ interview, question, question_number
         return () => clearInterval(timer);
     }, [isRecording, recordingTime]);
 
+
+    const submitAnswer = async () => {
+        setInterviewState('generating');
+
+        const feedbackRequest = {
+            interview_id: interview.id,
+            question_number: question_number,
+            job_title: interview.job_title,
+            question: question,
+            response: finalTranscript ? finalTranscript : textAnswer
+        };
+
+        try {
+            const response = await fetch('http://localhost:8000/feedback-ai/response', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify(feedbackRequest),
+            });
+
+            console.log("response", response);
+
+            if (!response.ok) {
+                throw new Error('Failed to generate feedback');
+            }
+
+            const data = await response.json();
+            console.log("Feedback data received:", data);
+
+            // Update local state
+            setFeedback(data.feedback);
+            setExistingResponse(data.response);
+            
+            // Notify parent component about the new feedback
+            if (onFeedbackGenerated && question_number) {
+                onFeedbackGenerated(question_number.toString(), {
+                    feedback: data.feedback,
+                    response: data.response
+                });
+            }
+            
+            setInterviewState('completed');
+        } catch (error) {
+            console.error('Error submitting answer:', error);
+            // Handle error state appropriately
+            setInterviewState('error');
+        }
+    };
+
     // Format time from seconds to a human-readable format
     const formatTime = (timeInSeconds) => {
         const minutes = Math.floor(timeInSeconds / 60);
@@ -156,7 +247,6 @@ export default function InterviewQuestion({ interview, question, question_number
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
-            setInterviewState('completed');
             setIsAnswerSubmitted(true);
         }
 
@@ -166,35 +256,26 @@ export default function InterviewQuestion({ interview, question, question_number
           setIsListening(false);
       }
 
-// here is where we will call the response api call
+      submitAnswer();
 
     };
 
     const handleNextQuestion = () => {
-        // We now call the onNext function directly to update the state and trigger
-        // the new question to render. The useEffect will handle the entrance animation.
-        if (question_number < interview.questions.length) {
-            onNext();
-            setInterviewState('question');
-            setRecordingTime(0);
-            setTextAnswer("");
-            setFinalTranscript("");
-            setSpeechTranscript("");
-            setIsAnswerSubmitted(false);
-        }
+      // We now call the onNext function directly to update the state and trigger
+      // the new question to render. The useEffect will handle the entrance animation.
+      if (question_number < interview.questions.length) {
+          onNext();
+          
+
+      }
     };
 
     const handlePreviousQuestion = () => {
-        // Same logic as handleNextQuestion, calling onPrevious directly.
-        onPrevious();
-        setInterviewState('question');
-        setRecordingTime(0);
-        setTextAnswer("");
-        setFinalTranscript("");
-        setSpeechTranscript("");
-        setIsAnswerSubmitted(false);
-       
+      // Same logic as handleNextQuestion, calling onPrevious directly.
+      onPrevious();
+    
     };
+
 
      // Animation variants
     const fadeUp = {
@@ -316,7 +397,7 @@ export default function InterviewQuestion({ interview, question, question_number
                           className="flex-1"
                           onClick={() => {
                             setIsAnswerSubmitted(true);
-                            setInterviewState("completed");
+                            submitAnswer();
                           }}
                         >
                           Submit Answer
@@ -401,6 +482,64 @@ export default function InterviewQuestion({ interview, question, question_number
                   </Card>
                 </motion.div>
               )}
+
+              {interviewState === "generating" && (
+                <motion.div
+                  key="generating"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.4 }}
+                >
+                  <Card>
+                    <CardContent className="pt-8 pb-8 text-center space-y-6">
+                      <div className="flex items-center justify-center">
+                        <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center">
+                          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <motion.h3 
+                          className="text-xl font-semibold text-gray-900"
+                          initial={{ opacity: 0.6 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ repeat: Infinity, repeatType: "reverse", duration: 1.5 }}
+                        >
+                          Analyzing your response...
+                        </motion.h3>
+                        <p className="text-gray-600">
+                          Our AI is generating personalized feedback for you
+                        </p>
+                      </div>
+
+                      {/* Progress dots animation */}
+                      <div className="flex justify-center space-x-2">
+                        {[0, 1, 2].map((i) => (
+                          <motion.div
+                            key={i}
+                            className="w-2 h-2 bg-indigo-400 rounded-full"
+                            animate={{
+                              scale: [1, 1.2, 1],
+                              opacity: [0.5, 1, 0.5],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              delay: i * 0.2,
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      <p className="text-sm text-gray-500">
+                        This may take a few moments
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
     
               {interviewState === "completed" && (
                 <motion.div
@@ -412,9 +551,8 @@ export default function InterviewQuestion({ interview, question, question_number
                   transition={{ duration: 0.4 }}
                 >
                   <InterviewFeedback
-                    question_number={question_number}
-                    num_questions={interview.questions.length}
-                    response={finalTranscript ? finalTranscript : textAnswer}
+                    response={existingResponse || finalTranscript || textAnswer}
+                    feedback={feedback}
                   />
                 </motion.div>
               )}
