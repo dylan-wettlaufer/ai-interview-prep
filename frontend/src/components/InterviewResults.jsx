@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Trophy, Target, CheckCircle, XCircle, Lightbulb, ThumbsUp, ThumbsDown, BookOpen, Clock, Home, Download, Share2, RotateCcw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -9,10 +9,8 @@ import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export default function InterviewResults({ interview_id }) {
+export default function InterviewResults({ interview, feedback }) {
     const [selectedQuestion, setSelectedQuestion] = useState(null);
-    const [interview, setInterview] = useState(null);
-    const [feedback, setFeedback] = useState(null);
 
     const totalTimeSpent = "10:15"
     const averageTimePerQuestion = "3:25"
@@ -29,64 +27,6 @@ export default function InterviewResults({ interview_id }) {
         if (score >= 60) return "text-yellow-600"
         return "text-red-600"
       }
-
-    // Fetch interview data
-    useEffect(() => {
-        const fetchInterview = async () => {
-            try {
-                const response = await fetch(`http://localhost:8000/gen-ai/interview/${interview_id}`, {
-                    method: 'GET',
-                    headers: {
-                    'Content-Type': 'application/json',  
-                },
-                credentials: 'include',
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log("interview:", data);
-            setInterview(data);
-            
-        } catch (error) {
-            console.error('Fetch error:', error);
-        }
-    };
-    
-    if (interview_id) {  // Only fetch if interview_id exists
-        fetchInterview();
-    }
-}, [interview_id]);
-
-
-    // Fetch feedback data
-    useEffect(() => {
-        const fetchAllFeedback = async () => {
-            try {
-                const response = await fetch(`http://localhost:8000/feedback-ai/response/${interview_id}/all`, {
-                    method: 'GET',
-                    headers: {
-                    'Content-Type': 'application/json',  
-                },
-                credentials: 'include',
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                console.log("feedback:", data);
-                setFeedback(data); // This will include the nested structure
-            }
-        } catch (error) {
-            console.error('Error fetching feedback:', error);
-        }
-        };
-        
-        if (interview_id) {
-            fetchAllFeedback();
-        }
-      }, [interview_id]);
 
       // sum overall feedback score from all three responses
       const sumOverallFeedbackScore = () => {

@@ -7,13 +7,17 @@ import { Clock, Mic, Type, MicOff, ArrowLeft, ArrowRight, Loader2 } from "lucide
 import { useState, useEffect, useRef } from "react"
 import InterviewFeedback from "./InterviewFeedback"
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 
 // Define the maximum recording time in seconds
 const MAX_RECORDING_TIME = 120; // 2 minutes
 
+
+
 export default function InterviewQuestion({ interview, question, question_number, onNext, onPrevious, existingFeedback, onFeedbackGenerated }) {
-    
+    const router = useRouter();
+
     const [interviewState, setInterviewState] = useState("");
     const [textAnswer, setTextAnswer] = useState("")
     const [isRecording, setIsRecording] = useState(false);
@@ -263,6 +267,8 @@ export default function InterviewQuestion({ interview, question, question_number
       // the new question to render. The useEffect will handle the entrance animation.
       if (question_number < interview.questions.length) {
           onNext();
+      } else {
+        router.push(`/interview/${interview_id}/results`);
       }
     };
 
@@ -575,6 +581,9 @@ export default function InterviewQuestion({ interview, question, question_number
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 {question_number > 1 ? "Previous Question" : "Return to Start"}
               </Button>
+
+              
+              
               <Button
                 className={`bg-indigo-500 ${
                   isAnswerSubmitted ? "cursor-pointer" : "cursor-not-allowed"

@@ -8,20 +8,25 @@ import { useRouter } from "next/navigation";
 
 
 
-export default function InterviewClient({ interview_id }) {
+export default function InterviewClient({ interview, feedback }) {
     const router = useRouter();
 
-    const [interview, setInterview] = useState(null);
-    const [allFeedback, setAllFeedback] = useState(null);
+    const [allFeedback, setAllFeedback] = useState(feedback);
+    const [interviewState, setInterviewState] = useState(0);
+    const [isInitialStateLoaded, setIsInitialStateLoaded] = useState(false);
 
-    // Use local storage to persist interview state
-    const [interviewState, setInterviewState] = useState(() => {
+    // This useEffect will run only on the client-side after the component mounts
+    useEffect(() => {
         if (typeof window !== 'undefined') {
-            const savedState = localStorage.getItem(`interview_${interview_id}_state`);
-            return savedState ? parseInt(savedState, 10) : 0;
+            const savedState = localStorage.getItem(`interview_${interview.id}_state`);
+            if (savedState !== null) {
+                setInterviewState(parseInt(savedState, 10));
+            }
         }
-        return 0;
-    });
+        setIsInitialStateLoaded(true);
+    }, [interview.id]);
+
+    
 
     // set interview to start
     const handleStartInterview = () => {
@@ -46,63 +51,10 @@ export default function InterviewClient({ interview_id }) {
     // Save interview state to local storage
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem(`interview_${interview_id}_state`, interviewState.toString());
+            localStorage.setItem(`interview_${interview.id}_state`, interviewState.toString());
         }
     }, [interviewState]);
 
-    // Fetch interview data
-    useEffect(() => {
-        const fetchInterview = async () => {
-            try {
-                const response = await fetch(`http://localhost:8000/gen-ai/interview/${interview_id}`, {
-                    method: 'GET',
-                    headers: {
-                    'Content-Type': 'application/json',  
-                },
-                credentials: 'include',
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            setInterview(data);
-        } catch (error) {
-            console.error('Fetch error:', error);
-        }
-    };
-    
-    if (interview_id) {  // Only fetch if interview_id exists
-        fetchInterview();
-    }
-}, [interview_id]);
-
-    // Fetch feedback data
-    useEffect(() => {
-        const fetchAllFeedback = async () => {
-            try {
-                const response = await fetch(`http://localhost:8000/feedback-ai/response/${interview_id}/all`, {
-                    method: 'GET',
-                    headers: {
-                    'Content-Type': 'application/json',  
-                },
-                credentials: 'include',
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                setAllFeedback(data); // This will include the nested structure
-            }
-        } catch (error) {
-            console.error('Error fetching feedback:', error);
-        }
-        };
-        
-        if (interview_id) {
-            fetchAllFeedback();
-        }
-      }, [interview_id]);
 
       // adds newly added feedback to the existing feedback so that it appears in the current session
       const handleFeedbackGenerated = (questionNumber, feedbackData) => {
@@ -145,7 +97,12 @@ export default function InterviewClient({ interview_id }) {
     // Use a variable to store the content to be rendered,
     // determined by a switch statement outside of the return.
     let content;
-    switch (interviewState) {
+
+    // Wait for the initial state to be loaded before rendering
+    if (!isInitialStateLoaded) {
+        content = <InterviewStartScreenSkeleton />;
+    } else {
+        switch (interviewState) {
         case 0:
             content = interview ? (
                 <InterviewStartScreen
@@ -169,7 +126,7 @@ export default function InterviewClient({ interview_id }) {
         default:
             content = <InterviewStartScreen interview={interview} />;
     }
-
+    }
 
     return (
         <div className=" bg-neutral-900 text-white font-inter">
