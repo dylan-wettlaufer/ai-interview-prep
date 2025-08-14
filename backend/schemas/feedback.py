@@ -22,6 +22,7 @@ class FeedbackResponse(BaseModel):
 class FeedbackItem(BaseModel):
     feedback: dict  # or create a specific feedback model
     response: str
+    question_number: int
 
 # Then create the response model for all feedback
 class AllFeedbackResponse(BaseModel):

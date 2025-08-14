@@ -61,7 +61,7 @@ export default function CreateInterviewPage() {
         }
 
         try {
-            const response = await fetch('http://localhost:8000/gen-ai/test', {
+            const response = await fetch('http://localhost:8000/gen-ai/generate-questions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

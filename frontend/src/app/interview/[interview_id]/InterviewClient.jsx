@@ -4,10 +4,12 @@ import DashboardHeader from "../../dashboard/components/DashboardHeader";
 import InterviewStartScreen from "./components/InterviewStartScreen";
 import InterviewStartScreenSkeleton from "./components/InterviewStartScreenSkeleton";
 import InterviewQuestion from "./components/InterviewQuestion"
+import { useRouter } from "next/navigation";
 
 
 
 export default function InterviewClient({ interview_id }) {
+    const router = useRouter();
 
     const [interview, setInterview] = useState(null);
     const [allFeedback, setAllFeedback] = useState(null);
@@ -15,32 +17,36 @@ export default function InterviewClient({ interview_id }) {
     // Use local storage to persist interview state
     const [interviewState, setInterviewState] = useState(() => {
         if (typeof window !== 'undefined') {
-            const savedState = localStorage.getItem('interviewState');
+            const savedState = localStorage.getItem(`interview_${interview_id}_state`);
             return savedState ? parseInt(savedState, 10) : 0;
         }
         return 0;
     });
 
+    // set interview to start
     const handleStartInterview = () => {
         setInterviewState(1);
     };
 
+    // increase the interview state by 1
     const handleNextQuestion = () => {
         setInterviewState(interviewState + 1);
     };
 
+    // decrease the interview state by 1
     const handlePreviousQuestion = () => {
         setInterviewState(interviewState - 1);
     };
 
+    // return to dashboard
     const handleReturnToDashboard = () => {
-        setInterviewState(0);
+        router.push('/dashboard');
     };
 
     // Save interview state to local storage
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem('interviewState', interviewState.toString());
+            localStorage.setItem(`interview_${interview_id}_state`, interviewState.toString());
         }
     }, [interviewState]);
 
@@ -123,7 +129,6 @@ export default function InterviewClient({ interview_id }) {
 
     // Helper function to render interview question
     const renderInterviewQuestion = (questionIndex) => {
-        
         return (
             <InterviewQuestion 
                 interview={interview} 
@@ -160,12 +165,6 @@ export default function InterviewClient({ interview_id }) {
             break;
         case 3:
             content = interview && allFeedback ? renderInterviewQuestion(2) : <InterviewStartScreenSkeleton />;
-            break;
-        case 4:
-            content = interview && allFeedback ? renderInterviewQuestion(3) : <InterviewStartScreenSkeleton />;
-            break;
-        case 5:
-            content = interview && allFeedback ? renderInterviewQuestion(4) : <InterviewStartScreenSkeleton />;
             break;
         default:
             content = <InterviewStartScreen interview={interview} />;

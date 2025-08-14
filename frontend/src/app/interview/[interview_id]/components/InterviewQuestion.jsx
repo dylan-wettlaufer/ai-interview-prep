@@ -37,7 +37,6 @@ export default function InterviewQuestion({ interview, question, question_number
     // Update state when existingFeedback prop changes (when navigating between questions)
     useEffect(() => {
         if (existingFeedback) {
-            console.log("existingFeedback1", existingFeedback.feedback);
             setFeedback(existingFeedback.feedback);
             setExistingResponse(existingFeedback.response || "");
             setIsAnswerSubmitted(true);
@@ -51,7 +50,6 @@ export default function InterviewQuestion({ interview, question, question_number
     // Update state when existingFeedback prop changes (when navigating between questions)
     useEffect(() => {
         if (existingFeedback) {
-            console.log("existingFeedback2", existingFeedback.feedback);
             setFeedback(existingFeedback.feedback);
             setExistingResponse(existingFeedback.response || "");
             setIsAnswerSubmitted(true);
@@ -265,8 +263,6 @@ export default function InterviewQuestion({ interview, question, question_number
       // the new question to render. The useEffect will handle the entrance animation.
       if (question_number < interview.questions.length) {
           onNext();
-          
-
       }
     };
 

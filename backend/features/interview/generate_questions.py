@@ -43,7 +43,7 @@ async def generate_questions(request: InterviewRequest, user: dict = Depends(get
     interview = request.interviewType
 
     # The text prompt is now simpler, as the schema will enforce the format.
-    prompt = f"Generate 3 {interview} interview questions for a {job} role."
+    prompt = f"Generate 3 {interview} interview questions for a {job} role. Do not include questions like 'Do you have any questions for us?'"
     
     try:
         model = genai.GenerativeModel(

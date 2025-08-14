@@ -24,7 +24,7 @@ export default function InterviewStartScreen({ interview, onStart, onReturn }) {
                             <h1 className="text-gray-100 text-center text-3xl font-bold pb-2">{interview.job_type} Interview</h1>
                             <div className="flex flex-row items-start justify-between gap-6 mb-4">
                                 <Badge className="text-gray-100 bg-neutral-500/20 border-neutral-500 w-32 h-6" variant="default">
-                                    <MessageCircleQuestionMark size={20} /> 5 Questions
+                                    <MessageCircleQuestionMark size={20} /> 3 Questions
                                 </Badge>
                                 <Badge className="text-gray-100 bg-neutral-500/20 border-neutral-500 w-32 h-6" variant="default">{interview.interview_type} Format</Badge>
                                 <Badge className="text-gray-100 bg-neutral-500/20 border-neutral-500 w-32 h-6" variant="default">{interview.interview_source} Interview</Badge>

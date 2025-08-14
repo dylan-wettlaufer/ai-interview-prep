@@ -135,7 +135,7 @@ async def response(request: FeedbackRequest, user: dict = Depends(get_current_us
                     "improvement_suggestions": feedback_json["improvement_suggestions"]
                 }
                 
-                return FeedbackItem(feedback=feedback_by_question, response=response)
+                return FeedbackItem(feedback=feedback_by_question, response=response, question_number=question_number)
 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -169,7 +169,8 @@ async def get_all_responses(interview_id: str, user: dict = Depends(get_current_
                     "negative_feedback": record["negative_feedback"],
                     "improvement_suggestions": record["improvement_suggestions"]
                 },
-                "response": record["user_response"]
+                "response": record["user_response"],
+                "question_number": record["question_number"]
             }
 
             # sort feedback_by_question by question_number
