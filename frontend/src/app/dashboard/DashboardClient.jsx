@@ -2,6 +2,7 @@
 import DashboardHeader from "./components/DashboardHeader";
 import { Mic, Zap, NotebookPen } from 'lucide-react';
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function DashboardClient() {
 
@@ -17,10 +18,12 @@ export default function DashboardClient() {
                 <h2 className="text-3xl font-bold text-gray-50">Welcome Dylan!</h2>
                 <p className="text-gray-400">Ready to ace your next interview?</p>
             </div>
+            <Link href="/interview/create">
             <button className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition-colors duration-200 flex items-center gap-2">
             <Mic size={20} />
             Start New Interview
             </button>
+            </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
