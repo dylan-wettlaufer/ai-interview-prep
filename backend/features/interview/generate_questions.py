@@ -278,13 +278,16 @@ async def genrate_ai_questions(job_title: str, job_description: str, interview_t
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-# select 3 random questions from the static questions
+# select 3 random questions from the static questions in object format
 def get_predefined_questions(job_title: str):
     job_title = job_title.strip()
     if job_title in STATIC_QUESTIONS:
-        return random.sample(STATIC_QUESTIONS[job_title], 3)
+        questions = random.sample(STATIC_QUESTIONS[job_title], 3)
     else:
-        return random.sample(STATIC_QUESTIONS["default"], 3)
+        questions = random.sample(STATIC_QUESTIONS["default"], 3)
+    
+    # wrap each question in {"question": ...} to match AI output
+    return [{"question": q} for q in questions]
 
 
 @router.post("/generate")

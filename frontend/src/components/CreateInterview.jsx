@@ -24,7 +24,7 @@ import {
     Clock,
     Play,
   } from "lucide-react"
-
+import { useRouter } from "next/navigation"
 import LoadingScreen from "./LoadingScreen"
 
 const popularJobTitles = [
@@ -111,23 +111,24 @@ const interviewCategories = [
 
   
 const focusAreas = [
-    { value: "technical", label: "Technical Skills" },
-    { value: "behavioral", label: "Behavioral Questions" },
-    { value: "system-design", label: "System Design" },
-    { value: "problem-solving", label: "Problem Solving" },
-    { value: "leadership", label: "Leadership" },
-    { value: "communication", label: "Communication" },
-    { value: "mixed", label: "Mixed (All Areas)" },
+    { value: "Technical", label: "Technical Skills" },
+    { value: "Behavioral", label: "Behavioral Questions" },
+    { value: "System Design", label: "System Design" },
+    { value: "Problem Solving", label: "Problem Solving" },
+    { value: "Leadership", label: "Leadership" },
+    { value: "Communication", label: "Communication" },
+    { value: "Mixed", label: "Mixed (All Areas)" },
   ]
   
 const difficultyLevels = [
-    { value: "entry", label: "Entry Level", description: "0-2 years experience" },
-    { value: "mid", label: "Mid Level", description: "2-5 years experience" },
-    { value: "senior", label: "Senior Level", description: "5+ years experience" },
-    { value: "lead", label: "Lead/Principal", description: "Leadership roles" },
+    { value: "Entry", label: "Entry Level", description: "0-2 years experience" },
+    { value: "Mid", label: "Mid Level", description: "2-5 years experience" },
+    { value: "Senior", label: "Senior Level", description: "5+ years experience" },
+    { value: "Lead", label: "Lead/Principal", description: "Leadership roles" },
   ]
 
 export default function CreateInterview() {
+    const router = useRouter()
     const [selectedTab, setSelectedTab] = useState("custom")
     const [jobTitle, setJobTitle] = useState("")
     const [jobDescription, setJobDescription] = useState("")
@@ -154,10 +155,6 @@ export default function CreateInterview() {
 
     const handleCreateInterview = async () => {
         setLoading(true)
-
-        if((!jobTitle || !selectedCategory) || !focusArea || !difficulty) {
-            return
-        }
 
         try {
             const response = await fetch('http://localhost:8000/gen-ai/generate', {
@@ -274,7 +271,7 @@ export default function CreateInterview() {
                             <Target className="h-5 w-5 mr-2" />
                             Interview Categories
                         </CardTitle>
-                        <p className="text-sm text-gray-500">Select a category to get started</p>
+                        <p className="text-sm text-gray-500">Select a category to get started with predefined questions</p>
                         </CardHeader>
                         <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -282,7 +279,7 @@ export default function CreateInterview() {
                             <Card
                                 key={category.id}
                                 className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-102 ${
-                                selectedCategory === category.id ? "ring-2 ring-neutral-400 " + category.color : category.color
+                                selectedCategory === category.title ? "ring-2 ring-neutral-400 " + category.color : category.color
                                 }`}
                                 onClick={() => handleCategorySelect(category.title)}
                             >
@@ -398,12 +395,11 @@ export default function CreateInterview() {
                         Cancel
                     </Button>
                     </Link>
-                    <Link href="/interview/welcome" className="flex-2">
+                    
                     <Button className="w-full" onClick={() => handleCreateInterview()} disabled={!canCreateInterview()}>
                         <Play className="h-4 w-4 mr-2" />
                         Create Interview
                     </Button>
-                    </Link>
                 </div>
                 </div>
             </div>
