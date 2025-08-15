@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default function InterviewResults({ interview, feedback }) {
-    const [selectedQuestion, setSelectedQuestion] = useState(null);
 
     const totalTimeSpent = "10:15"
     const averageTimePerQuestion = "3:25"
@@ -38,7 +37,7 @@ export default function InterviewResults({ interview, feedback }) {
                 sum += Number(item.feedback.overall_score);
             }
         }
-        return sum;
+        return ((sum / 300) * 100).toFixed(1);
     };
 
     const sumCategoryFeedbackScore = () => {
@@ -52,7 +51,7 @@ export default function InterviewResults({ interview, feedback }) {
             clarity_sum += item.feedback.clarity;
             completeness_sum += item.feedback.completeness;
         }
-        return {"content_score":content_sum*10, "clarity_score":clarity_sum*10, "completeness_score":completeness_sum*10};
+        return {"content_score":((content_sum/30)*100).toFixed(1), "clarity_score":((clarity_sum/30)*100).toFixed(1), "completeness_score":((completeness_sum/30)*100).toFixed(1)};
     };
 
     const getPerformanceLevel = (score) => {
@@ -91,7 +90,7 @@ export default function InterviewResults({ interview, feedback }) {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <Card className="h-32">
                         <CardContent className="pt-2 text-center">
-                            <div className="text-4xl font-bold text-green-600 mb-2">{sumOverallFeedbackScore()}</div>
+                            <div className={`text-4xl font-bold ${getScoreColor(sumOverallFeedbackScore())} mb-2`}>{sumOverallFeedbackScore()}</div>
                             <div className="text-sm text-gray-600 mb-2 gap-4">Overall Score <Badge variant="outline" className="text-green-600 border-green-600">
                             {getPerformanceLevel(sumOverallFeedbackScore())}
                             </Badge></div>

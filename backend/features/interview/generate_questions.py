@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from schemas.interview_request import InterviewRequest
 import google.generativeai as genai
 import os
@@ -7,6 +7,8 @@ import json
 from utils.supabase_client import get_authenticated_sb
 from features.auth.auth import get_current_user
 from supabase import Client
+from datetime import datetime
+from typing import Dict
 
 
 load_dotenv()
@@ -107,3 +109,55 @@ async def get_interview(interview_id: str, user: dict = Depends(get_current_user
         return response.data[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/interview/{interview_id}/complete", response_model=Dict)
+async def mark_interview_complete(
+    interview_id: str,
+    db: Client = Depends(get_authenticated_sb),
+    current_user = Depends(get_current_user)
+):
+    """
+    Mark an interview as completed.
+    """
+    # 1. First, check if the interview exists and is not already completed
+    try:
+        response = db.table("interview").select("completed").eq("id", interview_id).limit(1).execute()
+        
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Interview not found"
+            )
+
+        interview_data = response.data[0]
+        if interview_data['completed']:
+            return {"message": "Interview was already marked as complete", "interview_id": interview_id}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error checking interview status: {str(e)}"
+        )
+
+    # 2. If it exists and isn't completed, perform the update
+    try:
+        data_to_update = {
+            "completed": True,
+            "completed_at": datetime.now().isoformat()  # Use ISO format for Supabase
+        }
+        
+        updated_response = db.table("interview").update(data_to_update).eq("id", interview_id).execute()
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating interview: {str(e)}"
+        )
+    
+    return {
+        "message": "Interview marked as complete",
+        "interview_id": interview_id,
+        "completed": True,
+        "updated_at": data_to_update['completed_at']
+    }

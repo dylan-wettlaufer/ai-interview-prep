@@ -26,6 +26,8 @@ export default function InterviewQuestion({ interview, question, question_number
     const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(existingFeedback ? true : false);
     const [feedback, setFeedback] = useState(null);
     const [existingResponse, setExistingResponse] = useState("");
+    const [isCompleting, setIsCompleting] = useState(false);
+    const [error, setError] = useState(null);
 
 
     // New state for speech-to-text
@@ -72,6 +74,7 @@ export default function InterviewQuestion({ interview, question, question_number
         setRecordingTime(0);
         setIsRecording(false);
         setIsListening(false);
+        setError(null);
     }, [existingFeedback, question_number]);
 
     // Initialize speech recognition
@@ -262,21 +265,35 @@ export default function InterviewQuestion({ interview, question, question_number
 
     };
 
-    const handleNextQuestion = () => {
-      // We now call the onNext function directly to update the state and trigger
-      // the new question to render. The useEffect will handle the entrance animation.
-      if (question_number < interview.questions.length) {
-          onNext();
-      } else {
-        router.push(`/interview/${interview_id}/results`);
+    const onComplete = async () => {
+      setError(null);
+      setIsCompleting(true); 
+
+      try {
+
+        const response = await fetch(`http://localhost:8000/gen-ai/interview/${interview.id}/complete`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+         
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to mark interview as completed: ${response.status}`);
+        }
+
+        // remove state from local storage
+        localStorage.removeItem(`interview_${interview.id}_state`);
+        router.push(`/interview/${interview.id}/results`);
+
+      } catch (error) {
+        setIsCompleting(false);
+        setError('Failed to complete interview. Please try again.');
       }
     };
 
-    const handlePreviousQuestion = () => {
-      // Same logic as handleNextQuestion, calling onPrevious directly.
-      onPrevious();
-    
-    };
 
 
      // Animation variants
@@ -560,6 +577,35 @@ export default function InterviewQuestion({ interview, question, question_number
               )}
             </AnimatePresence>
           </div>
+
+          {/* Error Message Display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-6 max-w-4xl mx-auto"
+            >
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+                <button
+                  onClick={() => setError(null)}
+                  className="flex-shrink-0 text-red-400 hover:text-red-600"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
+          )}
     
           {/* Navigation */}
           <AnimatePresence>
@@ -573,10 +619,10 @@ export default function InterviewQuestion({ interview, question, question_number
               className="mt-8 flex justify-between items-center max-w-4xl mx-auto"
             >
               <Button
-                onClick={handlePreviousQuestion}
+                onClick={onPrevious}
                 variant="outline"
                 className="bg-transparent disabled:cursor-not-allowed cursor-pointer"
-                disabled={interviewState === "recording" || interviewState === "typing"}
+                disabled={interviewState === "recording" || interviewState === "typing" || isCompleting}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 {question_number > 1 ? "Previous Question" : "Return to Start"}
@@ -588,13 +634,17 @@ export default function InterviewQuestion({ interview, question, question_number
                 className={`bg-indigo-500 ${
                   isAnswerSubmitted ? "cursor-pointer" : "cursor-not-allowed"
                 }`}
-                onClick={handleNextQuestion}
-                disabled={!isAnswerSubmitted}
+                onClick={question_number < interview.questions.length ? onNext : onComplete}
+                disabled={!isAnswerSubmitted || isCompleting}
               >
                 {question_number < interview.questions.length
                   ? "Next Question"
                   : "Complete Interview"}
-                <ArrowRight className="h-4 w-4 ml-2" />
+                {isCompleting ? (
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                )}
               </Button>
             </motion.div>
           </AnimatePresence>
