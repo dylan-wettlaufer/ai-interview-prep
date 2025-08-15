@@ -25,6 +25,8 @@ import {
     Play,
   } from "lucide-react"
 
+import LoadingScreen from "./LoadingScreen"
+
 const popularJobTitles = [
     "Software Engineer",
     "Frontend Developer",
@@ -48,8 +50,6 @@ const interviewCategories = [
       icon: Code,
       color: "bg-blue-50 border-blue-200",
       iconColor: "text-blue-600",
-      questionCount: 150,
-      difficulty: "All Levels",
     },
     {
       id: "data-science",
@@ -58,8 +58,6 @@ const interviewCategories = [
       icon: TrendingUp,
       color: "bg-green-50 border-green-200",
       iconColor: "text-green-600",
-      questionCount: 85,
-      difficulty: "All Levels",
     },
     {
       id: "product-management",
@@ -68,8 +66,6 @@ const interviewCategories = [
       icon: Target,
       color: "bg-purple-50 border-purple-200",
       iconColor: "text-purple-600",
-      questionCount: 120,
-      difficulty: "All Levels",
     },
     {
       id: "design",
@@ -78,8 +74,6 @@ const interviewCategories = [
       icon: Palette,
       color: "bg-pink-50 border-pink-200",
       iconColor: "text-pink-600",
-      questionCount: 95,
-      difficulty: "All Levels",
     },
     {
       id: "marketing",
@@ -88,8 +82,6 @@ const interviewCategories = [
       icon: TrendingUp,
       color: "bg-orange-50 border-orange-200",
       iconColor: "text-orange-600",
-      questionCount: 75,
-      difficulty: "All Levels",
     },
     {
       id: "cybersecurity",
@@ -98,8 +90,6 @@ const interviewCategories = [
       icon: Shield,
       color: "bg-red-50 border-red-200",
       iconColor: "text-red-600",
-      questionCount: 110,
-      difficulty: "All Levels",
     },
     {
       id: "mobile-development",
@@ -108,8 +98,6 @@ const interviewCategories = [
       icon: Smartphone,
       color: "bg-indigo-50 border-indigo-200",
       iconColor: "text-indigo-600",
-      questionCount: 90,
-      difficulty: "All Levels",
     },
     {
       id: "web-development",
@@ -118,8 +106,6 @@ const interviewCategories = [
       icon: Globe,
       color: "bg-teal-50 border-teal-200",
       iconColor: "text-teal-600",
-      questionCount: 130,
-      difficulty: "All Levels",
     },
   ]
 
@@ -148,6 +134,7 @@ export default function CreateInterview() {
     const [selectedCategory, setSelectedCategory] = useState(null)
     const [focusArea, setFocusArea] = useState("")
     const [difficulty, setDifficulty] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const handlePopularJobSelect = (title) => {
         setJobTitle(title)
@@ -165,8 +152,46 @@ export default function CreateInterview() {
         }
       }
 
+    const handleCreateInterview = async () => {
+        setLoading(true)
+
+        if((!jobTitle || !selectedCategory) || !focusArea || !difficulty) {
+            return
+        }
+
+        try {
+            const response = await fetch('http://localhost:8000/gen-ai/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    jobTitle: selectedTab === "custom" ? jobTitle : selectedCategory,
+                    jobDescription: jobDescription,
+                    interviewType: focusArea,
+                    difficultyLevel: difficulty,
+                    interviewSource: selectedTab === "custom" ? "AI" : "Category"
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate questions');
+            }
+
+            const data = await response.json();
+            console.log(data);
+            router.push(`/interview/${data.interview_id}`);
+        } catch (error) {
+            console.error('Error generating questions:', error);
+            setLoading(false)
+        }
+        
+    }
 
     return (
+        <>
+        {loading && <LoadingScreen message="Generating questions..." />}
         <div className="min-h-screen bg-gray-50">
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto">
@@ -190,6 +215,7 @@ export default function CreateInterview() {
                             <MessageSquare className="h-5 w-5 mr-2" />
                             Job Details
                         </CardTitle>
+                        <p className="text-sm text-gray-500">Enter custom job details to get started</p>
                         </CardHeader>
                         <CardContent className="space-y-6">
                         {/* Job Title Input */}
@@ -248,35 +274,27 @@ export default function CreateInterview() {
                             <Target className="h-5 w-5 mr-2" />
                             Interview Categories
                         </CardTitle>
+                        <p className="text-sm text-gray-500">Select a category to get started</p>
                         </CardHeader>
                         <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {interviewCategories.map((category) => (
                             <Card
                                 key={category.id}
-                                className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                                selectedCategory === category.id ? "ring-2 ring-blue-500 " + category.color : category.color
+                                className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-102 ${
+                                selectedCategory === category.id ? "ring-2 ring-neutral-400 " + category.color : category.color
                                 }`}
-                                onClick={() => handleCategorySelect(category.id)}
+                                onClick={() => handleCategorySelect(category.title)}
                             >
-                                <CardContent className="pt-4">
+                                <CardContent className="">
                                 <div className="flex items-start space-x-3">
                                     <div className={`p-2 rounded-lg ${category.color}`}>
                                     <category.icon className={`h-5 w-5 ${category.iconColor}`} />
                                     </div>
                                     <div className="flex-1">
                                     <h3 className="font-semibold text-gray-900 mb-1">{category.title}</h3>
-                                    <p className="text-sm text-gray-600 mb-3">{category.description}</p>
-                                    <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                        <span className="flex items-center">
-                                        <MessageSquare className="h-3 w-3 mr-1" />
-                                        {category.questionCount} questions
-                                        </span>
-                                        <span className="flex items-center">
-                                        <Star className="h-3 w-3 mr-1" />
-                                        {category.difficulty}
-                                        </span>
-                                    </div>
+                                    <p className="text-sm text-gray-600 ">{category.description}</p>
+                                    
                                     </div>
                                 </div>
                                 </CardContent>
@@ -341,7 +359,7 @@ export default function CreateInterview() {
                 {/* Interview Preview */}
                 {canCreateInterview() && (
                     <Card className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                    <CardContent className="pt-6">
+                    <CardContent className="">
                         <div className="flex items-center justify-between">
                         <div>
                             <h3 className="font-semibold text-blue-900 mb-2">Interview Preview</h3>
@@ -353,7 +371,7 @@ export default function CreateInterview() {
                             ) : (
                                 <p>
                                 <strong>Category:</strong>{" "}
-                                {interviewCategories.find((cat) => cat.id === selectedCategory)?.title}
+                                {selectedCategory}
                                 </p>
                             )}
                             <p>
@@ -366,7 +384,7 @@ export default function CreateInterview() {
                         </div>
                         <div className="flex items-center space-x-2">
                             <Clock className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm text-blue-700">~30-45 minutes</span>
+                            <span className="text-sm text-blue-700">~5-10 minutes</span>
                         </div>
                         </div>
                     </CardContent>
@@ -381,7 +399,7 @@ export default function CreateInterview() {
                     </Button>
                     </Link>
                     <Link href="/interview/welcome" className="flex-2">
-                    <Button className="w-full" disabled={!canCreateInterview()}>
+                    <Button className="w-full" onClick={() => handleCreateInterview()} disabled={!canCreateInterview()}>
                         <Play className="h-4 w-4 mr-2" />
                         Create Interview
                     </Button>
@@ -390,6 +408,7 @@ export default function CreateInterview() {
                 </div>
             </div>
         </div>
+        </>
         
     )
   }
