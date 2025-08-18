@@ -106,7 +106,7 @@ export default function LoginForm() {
     };
 
     return (
-        <main className="min-h-screen bg-neutral-900 text-white">
+        <main className="min-h-screen bg-background text-white">
         <div className="container mx-auto px-4 py-16 max-w-md">
          
             <div className="bg-neutral-800 rounded-2xl shadow-lg p-8 border border-neutral-700">
@@ -156,7 +156,7 @@ export default function LoginForm() {
                 <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-semibold text-white bg-primary hover:bg-background/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                     {isLoading ? 'Logging in...' : 'Login'}
                     

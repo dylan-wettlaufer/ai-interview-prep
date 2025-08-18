@@ -16,3 +16,7 @@ class JobInput(BaseModel):
     interviewType: str
     difficultyLevel: str
     interviewSource: str
+
+class InterviewFeedback(BaseModel):
+    interview: list
+    feedback: list

@@ -68,7 +68,7 @@ export default function InterviewResults({ interview, feedback }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background">
             {/* Header */}
             <div className="bg-white border-b border-gray-200">
                 <div className="container mx-auto px-4 py-6">
@@ -315,14 +315,7 @@ export default function InterviewResults({ interview, feedback }) {
                             Back to Dashboard
                         </Button>
                         </Link>
-                        <Button variant="outline" className="flex-1 bg-transparent">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Report
-                        </Button>
-                        <Button variant="outline" className="flex-1 bg-transparent">
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share Results
-                        </Button>
+                        
                         <Button className="w-full flex-1">
                             <RotateCcw className="h-4 w-4 mr-2" />
                             Retake Interview

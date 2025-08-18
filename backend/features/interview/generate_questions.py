@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from schemas.interview_request import InterviewRequest, JobInput
+from schemas.interview_request import InterviewRequest, JobInput, InterviewFeedback
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
@@ -457,3 +457,4 @@ async def mark_interview_complete(
         "completed": True,
         "updated_at": data_to_update['completed_at']
     }
+
