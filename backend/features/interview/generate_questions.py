@@ -252,7 +252,7 @@ async def genrate_ai_questions(job_title: str, job_description: str, interview_t
     
     try:
         model = genai.GenerativeModel(
-            "gemini-2.5-flash-preview-05-20",  # Using the same model as the frontend
+            "gemini-2.5-flash",  # Using the same model as the frontend
             generation_config={
                 "response_mime_type": "application/json",
                 "response_schema": {

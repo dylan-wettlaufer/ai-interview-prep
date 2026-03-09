@@ -94,15 +94,15 @@ export default function CreateInterviewPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-neutral-900 text-white font-inter">
+        <div className="flex flex-col min-h-screen bg-white text-blue-950 font-inter">
             <DashboardHeader />
             <div className="flex-1 relative overflow-y-auto">
 
                 {isGenerating ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-900 z-10 transition-opacity duration-500 opacity-100 visible">
-                        <Loader2 className="h-16 w-16 text-indigo-500 animate-spin" />
-                        <p className="mt-4 text-xl font-semibold text-gray-100">Generating questions...</p>
-                        <p className="text-gray-400">Please wait, this might take a moment.</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 transition-opacity duration-500 opacity-100 visible">
+                        <Loader2 className="h-16 w-16 text-blue-950 animate-spin" />
+                        <p className="mt-4 text-xl font-semibold text-blue-950">Generating questions...</p>
+                        <p className="text-slate-500">Please wait, this might take a moment.</p>
                     </div>
                 ) : (
                 <>
@@ -111,8 +111,8 @@ export default function CreateInterviewPage() {
                 <div 
                     className={`absolute inset-0 transition-opacity duration-900 ease-in-out ${step === 1 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                     <div className="flex flex-col gap-8 justify-start items-center h-full p-6 md:p-8">
-                        <h1 className="pt-12 text-3xl font-bold text-gray-100 text-center">Select a Job Type</h1>
-                        <p className="text-lg text-gray-400 max-w-3xl mx-auto text-center">
+                        <h1 className="pt-12 text-3xl font-bold text-blue-950 text-center">Select a Job Type</h1>
+                        <p className="text-lg text-slate-600 max-w-3xl mx-auto text-center">
                             Our AI will tailor the questions and feedback based on the selected role.
                         </p>
                         <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
@@ -120,8 +120,8 @@ export default function CreateInterviewPage() {
                                 <button 
                                     onClick={() => handleJobSelect(jobType)} 
                                     className={`
-                                        cursor-pointer border border-indigo-500 bg-indigo-300/20 hover:bg-indigo-500/20 text-white font-semibold py-2 px-4 text-sm rounded-full shadow-lg
-                                        ${selectedJob === jobType ? 'border-2' : ''}
+                                        cursor-pointer border border-blue-200 bg-white hover:bg-blue-50 text-blue-950 font-semibold py-2 px-4 text-sm rounded-full shadow-sm transition-all
+                                        ${selectedJob === jobType ? 'border-2 border-blue-950 bg-blue-50' : ''}
                                     `}
                                     key={jobType}
                                 >
@@ -129,11 +129,11 @@ export default function CreateInterviewPage() {
                                 </button>
                             ))}
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-100 text-center">OR</h3>
-                        <h1 className="text-2xl font-bold text-gray-100 text-center">Create a custom interview using a job description</h1>
+                        <h3 className="text-2xl font-bold text-blue-950 text-center">OR</h3>
+                        <h1 className="text-2xl font-bold text-blue-950 text-center">Create a custom interview using a job description</h1>
                         <textarea 
                             placeholder="Enter job description here or describe the key responsibilities, skills, and qualifications of the job" 
-                            className="w-full md:w-3/4 max-w-xl h-80 md:h-60 border bg-neutral-800 border-violet-400/20 rounded-lg p-4 mt-4 mb-4 mx-auto resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all duration-200"
+                            className="w-full md:w-3/4 max-w-xl h-80 md:h-60 border bg-slate-50 border-slate-200 rounded-lg p-4 mt-4 mb-4 mx-auto resize-none focus:outline-none focus:ring-2 focus:ring-blue-950 transition-all duration-200 text-blue-950 placeholder:text-slate-400"
                         />
                     </div>
                 </div>
@@ -143,15 +143,15 @@ export default function CreateInterviewPage() {
                     className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${step === 2 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                     <div className="flex flex-col gap-8 justify-start items-center h-full p-6 md:p-8">
                         <div className="flex w-full justify-between items-center max-w-3xl">
-                            <button onClick={handleBack} className="cursor-pointer flex items-center text-indigo-400 hover:text-indigo-300 transition-colors duration-200">
+                            <button onClick={handleBack} className="cursor-pointer flex items-center text-slate-500 hover:text-blue-950 transition-colors duration-200">
                                 <ChevronLeft size={20} />
                                 Back
                             </button>
-                            <h1 className="sm:mt-6 pt-12 text-3xl font-bold text-gray-100 text-center flex-grow">Select Interview Type</h1>
+                            <h1 className="sm:mt-6 pt-12 text-3xl font-bold text-blue-950 text-center flex-grow">Select Interview Type</h1>
                             <div className="w-16"></div> {/* Spacer */}
                         </div>
 
-                        <p className="text-lg text-gray-400 mb-8 max-w-3xl mx-auto text-center">
+                        <p className="text-lg text-slate-600 mb-8 max-w-3xl mx-auto text-center">
                             Our AI will tailor the questions and feedback based on the **{selectedJob}** role.
                         </p>
 
@@ -166,24 +166,24 @@ export default function CreateInterviewPage() {
                                         transform hover:-translate-y-1 cursor-pointer
                                         ${
                                             selectedInterviewType === type.id
-                                            ? 'bg-indigo-600/20 border-indigo-500 shadow-lg'
-                                            : 'bg-neutral-800 border-transparent hover:bg-neutral-700/50'
+                                            ? 'bg-blue-50 border-blue-950 shadow-lg'
+                                            : 'bg-white border-slate-200 hover:bg-slate-50 hover:border-blue-200'
                                         }
                                     `}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="bg-gray-700 p-2 rounded-full text-gray-400">
+                                        <div className={`p-2 rounded-full ${selectedInterviewType === type.id ? 'bg-blue-950 text-white' : 'bg-slate-100 text-slate-500'}`}>
                                             <Zap size={20} />
                                         </div>
-                                        <h2 className="text-xl font-semibold text-gray-50">{type.label}</h2>
+                                        <h2 className="text-xl font-semibold text-blue-950">{type.label}</h2>
                                     </div>
-                                    <p className="text-gray-400 text-sm">{type.description}</p>
+                                    <p className="text-slate-600 text-sm">{type.description}</p>
                                 </button>
                             ))}
                         </div>
 
                         {errors.general && (
-                            <div className="bg-rose-600/10 border border-rose-500 text-rose-300 p-4 rounded-lg text-sm">
+                            <div className="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-lg text-sm">
                             {errors.general}
                             </div>
                         )}
@@ -197,8 +197,8 @@ export default function CreateInterviewPage() {
                                     transition-colors duration-200 mb-12
                                     ${
                                         selectedInterviewType
-                                        ? 'bg-indigo-500 text-white hover:bg-indigo-600 shadow-xl cursor-pointer'
-                                        : 'bg-neutral-700 text-neutral-400 cursor-not-allowed'
+                                        ? 'bg-blue-950 text-white hover:bg-blue-900 shadow-xl cursor-pointer'
+                                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                                     }
                                 `}
                             >

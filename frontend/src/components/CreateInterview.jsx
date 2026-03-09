@@ -189,7 +189,7 @@ export default function CreateInterview() {
     return (
         <>
         {loading && <LoadingScreen message="Generating questions..." />}
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-white">
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto">
                 <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
@@ -206,30 +206,30 @@ export default function CreateInterview() {
 
                     {/* Custom Interview Details Tab */}
                     <TabsContent value="custom" className="space-y-8">
-                    <Card>
+                    <Card className="border-slate-200 shadow-sm">
                         <CardHeader>
-                        <CardTitle className="flex items-center">
+                        <CardTitle className="flex items-center text-blue-950">
                             <MessageSquare className="h-5 w-5 mr-2" />
                             Job Details
                         </CardTitle>
-                        <p className="text-sm text-gray-500">Enter custom job details to get started</p>
+                        <p className="text-sm text-slate-500">Enter custom job details to get started</p>
                         </CardHeader>
                         <CardContent className="space-y-6">
                         {/* Job Title Input */}
                         <div className="space-y-2">
-                            <Label htmlFor="job-title">Job Title *</Label>
+                            <Label htmlFor="job-title" className="text-blue-950">Job Title *</Label>
                             <Input
                             id="job-title"
                             placeholder="e.g., Senior Software Engineer"
                             value={jobTitle}
                             onChange={(e) => setJobTitle(e.target.value)}
-                            className="text-base"
+                            className="text-base border-slate-200 focus:ring-blue-950"
                             />
                         </div>
 
                         {/* Popular Job Titles */}
                         <div className="space-y-3">
-                            <Label>Popular Job Titles</Label>
+                            <Label className="text-blue-950">Popular Job Titles</Label>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                             {popularJobTitles.map((title) => (
                                 <Button
@@ -237,7 +237,7 @@ export default function CreateInterview() {
                                 variant={jobTitle === title ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => handlePopularJobSelect(title)}
-                                className="text-xs h-8 bg-transparent"
+                                className={`text-xs h-8 ${jobTitle === title ? 'bg-blue-950 text-white hover:bg-blue-900' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                                 >
                                 {title}
                                 </Button>
@@ -247,15 +247,15 @@ export default function CreateInterview() {
 
                         {/* Job Description */}
                         <div className="space-y-2">
-                            <Label htmlFor="job-description">Job Description (Optional)</Label>
+                            <Label htmlFor="job-description" className="text-blue-950">Job Description (Optional)</Label>
                             <Textarea
                             id="job-description"
                             placeholder="Paste the job description here or describe the role, responsibilities, and requirements..."
                             value={jobDescription}
                             onChange={(e) => setJobDescription(e.target.value)}
-                            className="min-h-[120px] text-sm"
+                            className="min-h-[120px] text-sm border-slate-200 focus:ring-blue-950"
                             />
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-slate-500">
                             Adding a job description helps generate more relevant interview questions
                             </p>
                         </div>
@@ -265,32 +265,32 @@ export default function CreateInterview() {
 
                     {/* Browse Categories Tab */}
                     <TabsContent value="browse" className="space-y-8">
-                    <Card>
+                    <Card className="border-slate-200 shadow-sm">
                         <CardHeader>
-                        <CardTitle className="flex items-center">
+                        <CardTitle className="flex items-center text-blue-950">
                             <Target className="h-5 w-5 mr-2" />
                             Interview Categories
                         </CardTitle>
-                        <p className="text-sm text-gray-500">Select a category to get started with predefined questions</p>
+                        <p className="text-sm text-slate-500">Select a category to get started with predefined questions</p>
                         </CardHeader>
                         <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {interviewCategories.map((category) => (
                             <Card
                                 key={category.id}
-                                className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-102 ${
-                                selectedCategory === category.title ? "ring-2 ring-neutral-400 " + category.color : category.color
+                                className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-102 border-slate-200 ${
+                                selectedCategory === category.title ? "ring-2 ring-blue-950 bg-blue-50" : "bg-white"
                                 }`}
                                 onClick={() => handleCategorySelect(category.title)}
                             >
-                                <CardContent className="">
+                                <CardContent className="pt-6">
                                 <div className="flex items-start space-x-3">
-                                    <div className={`p-2 rounded-lg ${category.color}`}>
-                                    <category.icon className={`h-5 w-5 ${category.iconColor}`} />
+                                    <div className={`p-2 rounded-lg bg-blue-50`}>
+                                    <category.icon className={`h-5 w-5 text-blue-950`} />
                                     </div>
                                     <div className="flex-1">
-                                    <h3 className="font-semibold text-gray-900 mb-1">{category.title}</h3>
-                                    <p className="text-sm text-gray-600 ">{category.description}</p>
+                                    <h3 className="font-semibold text-blue-950 mb-1">{category.title}</h3>
+                                    <p className="text-sm text-slate-600 ">{category.description}</p>
                                     
                                     </div>
                                 </div>
@@ -304,9 +304,9 @@ export default function CreateInterview() {
                 </Tabs>
 
                 {/* Interview Configuration */}
-                <Card className="mt-8">
+                <Card className="mt-8 border-slate-200 shadow-sm">
                     <CardHeader>
-                    <CardTitle className="flex items-center">
+                    <CardTitle className="flex items-center text-blue-950">
                         <Zap className="h-5 w-5 mr-2" />
                         Interview Configuration
                     </CardTitle>
@@ -315,7 +315,7 @@ export default function CreateInterview() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Focus Area */}
                         <div className="space-y-2">
-                        <Label>Focus Area *</Label>
+                        <Label className="text-blue-950">Focus Area *</Label>
                         <Select value={focusArea} onValueChange={setFocusArea}>
                             <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select focus area" />
@@ -332,7 +332,7 @@ export default function CreateInterview() {
 
                         {/* Difficulty Level */}
                         <div className="space-y-2">
-                        <Label>Difficulty Level *</Label>
+                        <Label className="text-blue-950">Difficulty Level *</Label>
                         <Select value={difficulty} onValueChange={setDifficulty}>
                             <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select difficulty" />
@@ -342,7 +342,7 @@ export default function CreateInterview() {
                                 <SelectItem key={level.value} value={level.value} className="py-2 px-4">
                                 <div className="flex flex-col">
                                     <span>{level.label}</span>
-                                    <span className="text-xs text-gray-500">{level.description}</span>
+                                    <span className="text-xs text-slate-500">{level.description}</span>
                                 </div>
                                 </SelectItem>
                             ))}
@@ -355,12 +355,12 @@ export default function CreateInterview() {
 
                 {/* Interview Preview */}
                 {canCreateInterview() && (
-                    <Card className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                    <CardContent className="">
+                    <Card className="mt-8 bg-blue-50 border-blue-200">
+                    <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="font-semibold text-blue-900 mb-2">Interview Preview</h3>
-                            <div className="space-y-1 text-sm text-blue-700">
+                            <h3 className="font-semibold text-blue-950 mb-2">Interview Preview</h3>
+                            <div className="space-y-1 text-sm text-blue-800">
                             {selectedTab === "custom" ? (
                                 <p>
                                 <strong>Position:</strong> {jobTitle}
@@ -380,8 +380,8 @@ export default function CreateInterview() {
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Clock className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm text-blue-700">~5-10 minutes</span>
+                            <Clock className="h-4 w-4 text-blue-950" />
+                            <span className="text-sm text-blue-950">~5-10 minutes</span>
                         </div>
                         </div>
                     </CardContent>
@@ -391,12 +391,12 @@ export default function CreateInterview() {
                 {/* Action Buttons */}
                 <div className="flex gap-4 mt-8">
                     <Link href="/dashboard" className="flex-1">
-                    <Button variant="outline" className="w-full bg-transparent">
+                    <Button variant="outline" className="w-full bg-transparent border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950">
                         Cancel
                     </Button>
                     </Link>
                     
-                    <Button className="w-full" onClick={() => handleCreateInterview()} disabled={!canCreateInterview()}>
+                    <Button className="flex-1 bg-blue-950 hover:bg-blue-900 text-white" onClick={() => handleCreateInterview()} disabled={!canCreateInterview()}>
                         <Play className="h-4 w-4 mr-2" />
                         Create Interview
                     </Button>
@@ -408,5 +408,3 @@ export default function CreateInterview() {
         
     )
   }
-
-

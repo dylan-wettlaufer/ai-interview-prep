@@ -23,7 +23,7 @@ async function InterviewProgressLoader() {
 export default async function DashboardPage() {
 
   return (
-    <div className="min-h-screen bg-neutral-100">
+    <div className="min-h-screen bg-white">
           <DashboardHeader />
           
           <main className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -31,15 +31,15 @@ export default async function DashboardPage() {
               {/* Welcome Section */}
               <div className="flex md:flex-row flex-col justify-between md:items-center gap-4">
               <div className="animate-fade-in">
-                <h1 className="text-3xl font-bold text-foreground mb-2">
+                <h1 className="text-3xl font-bold text-blue-950 mb-2">
                   Welcome Dylan! 
                 </h1>
-                <p className="text-secondary-foreground">
+                <p className="text-slate-600">
                   Track your interview preparation progress and review your performance.
                 </p>
               </div>
               <Link href="/interview/create">
-                <Button variant="default" size="lg" >
+                <Button className="bg-blue-950 hover:bg-blue-900 text-white" size="lg" >
                     <Plus className="mr-2 h-4 w-4" />
                     Create Interview
                 </Button>

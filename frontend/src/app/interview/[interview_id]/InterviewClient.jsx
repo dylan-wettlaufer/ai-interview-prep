@@ -129,7 +129,7 @@ export default function InterviewClient({ interview, feedback }) {
     }
 
     return (
-        <div className=" bg-neutral-900 text-white font-inter">
+        <div className=" bg-white text-blue-950 font-inter min-h-screen">
             <DashboardHeader />
 
             {/* render the content variable */}

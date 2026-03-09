@@ -39,6 +39,8 @@ export default function InterviewQuestion({ interview, question, question_number
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
     const recognitionRef = useRef(null);
+    const accumulatedFinalRef = useRef("");
+    const latestTranscriptRef = useRef("");
 
     // Update state when existingFeedback prop changes (when navigating between questions)
     useEffect(() => {
@@ -75,6 +77,8 @@ export default function InterviewQuestion({ interview, question, question_number
         setIsRecording(false);
         setIsListening(false);
         setError(null);
+        accumulatedFinalRef.current = "";
+        latestTranscriptRef.current = "";
     }, [existingFeedback, question_number]);
 
     // Initialize speech recognition
@@ -89,27 +93,25 @@ export default function InterviewQuestion({ interview, question, question_number
 
           recognitionRef.current.onresult = (event) => {
             let interimTranscript = '';
-            let finalTranscriptPart = '';
+            let newFinalPart = '';
             
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
-                    finalTranscriptPart += transcript;
+                    newFinalPart += transcript;
                 } else {
                     interimTranscript += transcript;
                 }
             }
             
-            // Update final transcript by appending new final results
-            if (finalTranscriptPart) {
-                setFinalTranscript(prev => prev + finalTranscriptPart);
+            if (newFinalPart) {
+                accumulatedFinalRef.current += newFinalPart;
+                setFinalTranscript(accumulatedFinalRef.current);
             }
             
-            // Show combined final + interim transcript
-            setSpeechTranscript(prev => {
-                const currentFinal = finalTranscript + finalTranscriptPart;
-                return currentFinal + interimTranscript;
-            });
+            const fullText = accumulatedFinalRef.current + interimTranscript;
+            latestTranscriptRef.current = fullText;
+            setSpeechTranscript(fullText);
         };
 
           recognitionRef.current.onend = () => {
@@ -153,12 +155,14 @@ export default function InterviewQuestion({ interview, question, question_number
     const submitAnswer = async () => {
         setInterviewState('generating');
 
+        const responseText = latestTranscriptRef.current ? latestTranscriptRef.current : textAnswer;
+
         const feedbackRequest = {
             interview_id: interview.id,
             question_number: question_number,
             job_title: interview.job_title,
             question: question,
-            response: finalTranscript ? finalTranscript : textAnswer
+            response: responseText
         };
 
         try {
@@ -212,6 +216,8 @@ export default function InterviewQuestion({ interview, question, question_number
         setAudioURL(null); // Clear any previous recording
         setSpeechTranscript("");
         setFinalTranscript("");
+        accumulatedFinalRef.current = "";
+        latestTranscriptRef.current = "";
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -316,23 +322,23 @@ export default function InterviewQuestion({ interview, question, question_number
                 exit="exit"
                 transition={{ duration: 0.4 }}
               >
-                <Card className="mb-8 bg-neutral-800 border border-neutral-600">
+                <Card className="mb-8 bg-white border border-slate-200 shadow-sm">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg text-gray-100">
+                      <CardTitle className="text-lg text-blue-950">
                         Question {question_number}
                       </CardTitle>
                       <Badge
                         variant="outline"
-                        className="bg-neutral-700 flex items-center space-x-1 text-gray-100"
+                        className="bg-blue-50 border-blue-200 flex items-center space-x-1 text-blue-950"
                       >
-                        <Clock className="h-4 w-4" />
+                        <Clock className="h-4 w-4 text-blue-950" />
                         <span>2:00</span>
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xl text-gray-100 leading-relaxed">
+                    <p className="text-xl text-blue-950 leading-relaxed">
                       {question}
                     </p>
                   </CardContent>
@@ -353,21 +359,21 @@ export default function InterviewQuestion({ interview, question, question_number
                 >
                   <Card>
                     <CardContent className="pt-6 text-center space-y-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h3 className="text-lg font-semibold text-blue-950 mb-2">
                         Choose how you'd like to answer
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-slate-600">
                         You can record your voice response or type your answer
                       </p>
                       <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                        <Button onClick={() => setInterviewState("recording")} className="flex-1 h-12">
+                        <Button onClick={() => setInterviewState("recording")} className="flex-1 h-12 bg-blue-950 hover:bg-blue-900 text-white">
                           <Mic className="h-5 w-5 mr-2" />
                           Record Answer
                         </Button>
                         <Button
                           onClick={() => setInterviewState("typing")}
                           variant="outline"
-                          className="flex-1 h-12 bg-transparent"
+                          className="flex-1 h-12 bg-transparent border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950"
                         >
                           <Type className="h-4 w-4 mr-2" />
                           Type Answer
@@ -390,30 +396,30 @@ export default function InterviewQuestion({ interview, question, question_number
                   <Card>
                     <CardContent className="pt-4 space-y-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className="text-lg font-semibold text-blue-950 mb-2">
                           Type your answer
                         </h3>
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-slate-600 mb-4">
                           Write a detailed response to the question above
                         </p>
                         <Textarea
                           placeholder="Start typing your answer here..."
                           value={textAnswer}
                           onChange={(e) => setTextAnswer(e.target.value)}
-                          className="min-h-[200px] text-base"
+                          className="min-h-[200px] text-base border-slate-200 focus:ring-blue-950"
                         />
                       </div>
                       <div className="flex gap-4">
                         <Button
                           onClick={() => setInterviewState("question")}
                           variant="outline"
-                          className="bg-transparent"
+                          className="bg-transparent border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950"
                         >
                           Back
                         </Button>
                         <Button
                           disabled={!textAnswer.trim()}
-                          className="flex-1"
+                          className="flex-1 bg-blue-950 hover:bg-blue-900 text-white"
                           onClick={() => {
                             setIsAnswerSubmitted(true);
                             submitAnswer();
@@ -443,7 +449,7 @@ export default function InterviewQuestion({ interview, question, question_number
                           <div className="w-6 h-6 bg-red-500 rounded-full animate-pulse"></div>
                         </div>
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-xl font-semibold text-blue-950">
                         Recording in progress...
                       </h3>
                       <div className="text-3xl font-mono text-red-600">
@@ -452,15 +458,15 @@ export default function InterviewQuestion({ interview, question, question_number
 
                       {/* Real-time transcript display */}
                       {isListening && (
-                        <div className="bg-gray-50 p-4 rounded-lg border max-h-40 overflow-y-auto">
-                          <p className="text-sm text-gray-600 mb-2">Live transcript:</p>
+                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 max-h-40 overflow-y-auto">
+                          <p className="text-sm text-slate-500 mb-2">Live transcript:</p>
                           {speechTranscript && (
-                            <p className="text-gray-800">{speechTranscript}</p>
+                            <p className="text-blue-950">{speechTranscript}</p>
                           )}
                         </div>
                       )}
                       
-                      <p className="text-gray-600">
+                      <p className="text-slate-600">
                         Speak clearly and take your time
                       </p>
                       
@@ -470,7 +476,7 @@ export default function InterviewQuestion({ interview, question, question_number
                             <Button
                             onClick={() => setInterviewState("question")}
                             variant="outline"
-                            className="bg-transparent"
+                            className="bg-transparent border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950"
                             size="lg"
                           >
                             Back
@@ -489,6 +495,7 @@ export default function InterviewQuestion({ interview, question, question_number
                         ) : (
                         <Button
                           onClick={startRecording}
+                          className="bg-blue-950 hover:bg-blue-900 text-white"
                           size="lg"
                         >
                           <Mic className="h-5 w-5 mr-2" />
@@ -514,21 +521,21 @@ export default function InterviewQuestion({ interview, question, question_number
                   <Card>
                     <CardContent className="pt-8 pb-8 text-center space-y-6">
                       <div className="flex items-center justify-center">
-                        <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center">
-                          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+                        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+                          <Loader2 className="w-8 h-8 text-blue-950 animate-spin" />
                         </div>
                       </div>
                       
                       <div className="space-y-2">
                         <motion.h3 
-                          className="text-xl font-semibold text-gray-900"
+                          className="text-xl font-semibold text-blue-950"
                           initial={{ opacity: 0.6 }}
                           animate={{ opacity: 1 }}
                           transition={{ repeat: Infinity, repeatType: "reverse", duration: 1.5 }}
                         >
                           Analyzing your response...
                         </motion.h3>
-                        <p className="text-gray-600">
+                        <p className="text-slate-600">
                           Our AI is generating personalized feedback for you
                         </p>
                       </div>
@@ -538,7 +545,7 @@ export default function InterviewQuestion({ interview, question, question_number
                         {[0, 1, 2].map((i) => (
                           <motion.div
                             key={i}
-                            className="w-2 h-2 bg-indigo-400 rounded-full"
+                            className="w-2 h-2 bg-blue-950 rounded-full"
                             animate={{
                               scale: [1, 1.2, 1],
                               opacity: [0.5, 1, 0.5],
@@ -552,7 +559,7 @@ export default function InterviewQuestion({ interview, question, question_number
                         ))}
                       </div>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-slate-500">
                         This may take a few moments
                       </p>
                     </CardContent>
@@ -621,7 +628,7 @@ export default function InterviewQuestion({ interview, question, question_number
               <Button
                 onClick={onPrevious}
                 variant="outline"
-                className="bg-transparent disabled:cursor-not-allowed cursor-pointer"
+                className="bg-transparent disabled:cursor-not-allowed cursor-pointer border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950"
                 disabled={interviewState === "recording" || interviewState === "typing" || isCompleting}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -631,7 +638,7 @@ export default function InterviewQuestion({ interview, question, question_number
               
               
               <Button
-                className={`bg-indigo-500 ${
+                className={`bg-blue-950 hover:bg-blue-900 text-white ${
                   isAnswerSubmitted ? "cursor-pointer" : "cursor-not-allowed"
                 }`}
                 onClick={question_number < interview.questions.length ? onNext : onComplete}
