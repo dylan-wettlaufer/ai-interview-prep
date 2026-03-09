@@ -12,7 +12,8 @@ The goal is to help job seekers practice interviews in a realistic environment a
 
 ## Demo
 
-[![Watch the demo](https://img.youtube.com/vi/sWzxdNbWSwo/0.jpg)](https://youtu.be/sWzxdNbWSwo)
+**Watch the demo video:**  
+https://youtu.be/sWzxdNbWSwo
 
 ## Key Capabilities
 
