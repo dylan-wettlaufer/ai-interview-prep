@@ -7,28 +7,28 @@ export default function DashboardStats({summary}) {
     {
       title: "Total Interviews",
       value: summary.total_interviews || 0,
-      change: "+3 this week",
+      change: summary.total_interviews > 0 ? `${summary.total_interviews} total sessions` : "No interviews yet",
       icon: Target,
       gradient: "bg-primary"
     },
     {
       title: "In Progress", 
       value: summary.in_progress_count || 0,
-      change: "Active sessions",
+      change: summary.in_progress_count > 0 ? `${summary.in_progress_count} active session${summary.in_progress_count !== 1 ? 's' : ''}` : "No active sessions",
       icon: Clock,
       gradient: "bg-primary"
     },
     {
       title: "Completed",
       value: summary.completed_count || 0, 
-      change: "67% success rate",
+      change: `${summary.completion_rate}% completion rate`,
       icon: CheckCircle,
       gradient: "bg-primary"
     },
     {
       title: "Completion Rate",
-      value: summary.completion_rate + "%" || 0,
-      change: "+0.5 improvement",
+      value: summary.completion_rate + "%" || "0%",
+      change: summary.completed_count > 0 ? `${summary.completed_count} completed` : "No completions yet",
       icon: TrendingUp,
       gradient: "bg-primary"
     }

@@ -1,6 +1,7 @@
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardStats from "@/components/DashboardStats";
 import InterviewProgress from "@/components/InterviewProgress";
+import TimeBasedGreeting from "@/components/TimeBasedGreeting";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -30,14 +31,7 @@ export default async function DashboardPage() {
             <div className="space-y-8">
               {/* Welcome Section */}
               <div className="flex md:flex-row flex-col justify-between md:items-center gap-4">
-              <div className="animate-fade-in">
-                <h1 className="text-3xl font-bold text-blue-950 mb-2">
-                  Welcome Dylan! 
-                </h1>
-                <p className="text-slate-600">
-                  Track your interview preparation progress and review your performance.
-                </p>
-              </div>
+              <TimeBasedGreeting />
               <Link href="/interview/create">
                 <Button className="bg-blue-950 hover:bg-blue-900 text-white" size="lg" >
                     <Plus className="mr-2 h-4 w-4" />
