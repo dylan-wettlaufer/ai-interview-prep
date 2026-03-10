@@ -6,6 +6,8 @@ from utils.supabase_client import supabase
 from schemas.auth import SignupRequest, LoginRequest, User
 from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
+from supabase_auth.errors import AuthApiError
+from utils.rate_limiter import check_rate_limit, login_limiter, signup_limiter
 
 load_dotenv()
 
@@ -20,8 +22,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Authentication routes
 @router.post("/signup")
-async def signup(data: SignupRequest):
+async def signup(data: SignupRequest, request: Request):
     try:
+        # Check rate limit
+        check_rate_limit(request, signup_limiter, "signup")
         
         response = supabase.auth.sign_up({
             "email": data.email,
@@ -63,42 +67,64 @@ async def signup(data: SignupRequest):
         )
 
 @router.post("/login")
-async def login(data: LoginRequest):
+async def login(data: LoginRequest, request: Request):
     print("--- Starting login process ---")
     print(f"Attempting login for email: {data.email}")
 
-    # Step 1: Call Supabase to authenticate
-    login_response = supabase.auth.sign_in_with_password({
-        "email": data.email,
-        "password": data.password
-    })
-    print(f"Supabase login response received.")
-    
-    # Step 2: Check if authentication was successful
-    if login_response.user is None:
-        print("Login FAILED. Supabase did not return a user object.")
-        # We're raising an exception here, so the next lines will never run.
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+    try:
+        # Check rate limit
+        check_rate_limit(request, login_limiter, "login")
+        
+        # Step 1: Call Supabase to authenticate
+        login_response = supabase.auth.sign_in_with_password({
+            "email": data.email,
+            "password": data.password
+        })
+        print(f"Supabase login response received.")
+        
+        # Step 2: Check if authentication was successful
+        if login_response.user is None:
+            print("Login FAILED. Supabase did not return a user object.")
+            raise HTTPException(status_code=400, detail="The email or password you entered is incorrect. Please check your credentials and try again.")
 
-    print(f"Login SUCCESSFUL! User ID: {login_response.user.id}")
-    
-    # Step 3: Create a JWT and set the cookie
-    access_token = login_response.session.access_token
-    
-    response = JSONResponse(content={"message": "Login successful"})
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=True,
-        secure=False,  # Still using False for local testing
-        samesite="Lax",
-        max_age=3600,
-        path="/"
-    )
-    print("Cookie was set on the response object.")
-    
-    print("--- Login process complete ---")
-    return response
+        print(f"Login SUCCESSFUL! User ID: {login_response.user.id}")
+        
+        # Step 3: Create a JWT and set the cookie
+        access_token = login_response.session.access_token
+        
+        response = JSONResponse(content={"message": "Login successful"})
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,  # Still using False for local testing
+            samesite="Lax",
+            max_age=3600,
+            path="/"
+        )
+        print("Cookie was set on the response object.")
+        
+        print("--- Login process complete ---")
+        return response
+        
+    except AuthApiError as e:
+        print(f"Supabase Auth Error: {e}")
+        if "Invalid login credentials" in str(e):
+            raise HTTPException(
+                status_code=400, 
+                detail="The email or password you entered is incorrect. Please check your credentials and try again."
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Authentication failed: {str(e)}"
+            )
+    except Exception as e:
+        print(f"Unexpected error during login: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred during login. Please try again."
+        )
 
 # And for a clean test, let's also update the logout route
 @router.post("/logout")

@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, message: '' });
 
   const handleChange = (e) => {
     setFormData({
@@ -24,6 +25,46 @@ export default function SignupPage() {
       ...prev,
       [e.target.name]: ''
     }));
+    
+    // Calculate password strength when password changes
+    if (e.target.name === 'password') {
+      calculatePasswordStrength(e.target.value);
+    }
+  };
+
+  const calculatePasswordStrength = (password) => {
+    let score = 0;
+    let message = '';
+    let requirements = [];
+
+    if (password.length >= 8) score += 1;
+    else requirements.push('8+ characters');
+    
+    if (/[a-z]/.test(password)) score += 1;
+    else requirements.push('lowercase letter');
+    
+    if (/[A-Z]/.test(password)) score += 1;
+    else requirements.push('uppercase letter');
+    
+    if (/[0-9]/.test(password)) score += 1;
+    else requirements.push('number');
+    
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+    else requirements.push('special character');
+
+    if (password.length === 0) {
+      message = '';
+    } else if (score < 3) {
+      message = `Weak password. Add: ${requirements.join(', ')}`;
+    } else if (score < 4) {
+      message = 'Fair password';
+    } else if (score < 5) {
+      message = 'Good password';
+    } else {
+      message = 'Strong password';
+    }
+
+    setPasswordStrength({ score, message });
   };
 
   const validateForm = () => {
@@ -45,8 +86,10 @@ export default function SignupPage() {
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (passwordStrength.score < 3) {
+      newErrors.password = 'Password is too weak. Please include uppercase, lowercase, numbers, and special characters.';
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -108,15 +151,15 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="min-h-screen bg-neutral-900 text-white">
+    <main className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-16 max-w-md">
-        <div className="bg-neutral-800 rounded-2xl shadow-lg p-8 border border-neutral-700">
-          <h1 className="text-3xl font-bold text-center text-gray-100 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+          <h1 className="text-3xl font-bold text-center text-blue-950 mb-8">
             Create Account
           </h1>
   
           {successMessage && (
-            <div className="bg-green-600/10 border border-green-500 text-green-300 p-4 mb-6 rounded-lg text-sm">
+            <div className="bg-green-50 border border-green-200 text-green-800 p-4 mb-6 rounded-lg text-sm">
               {successMessage}
             </div>
           )}
@@ -131,7 +174,7 @@ export default function SignupPage() {
                 { label: 'Confirm Password', id: 'confirmPassword', type: 'password' },
               ].map(({ label, id, type = 'text' }) => (
                 <div key={id}>
-                  <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1">
+                  <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
                     {label}
                   </label>
                   <input
@@ -140,18 +183,27 @@ export default function SignupPage() {
                     name={id}
                     value={formData[id]}
                     onChange={handleChange}
-                    className={`mt-1 mb-4 p-2 h-8 block w-full rounded-md bg-neutral-700 text-white border border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 ${
-                      errors[id] ? 'border-rose-500 ring-rose-500' : ''
+                    className={`mt-1 mb-4 p-3 h-10 block w-full rounded-md bg-white text-gray-900 border border-gray-300 shadow-sm focus:border-blue-950 focus:ring-1 focus:ring-blue-950 ${
+                      errors[id] ? 'border-red-500 ring-red-500' : ''
                     }`}
                   />
                   {errors[id] && (
-                    <p className="mt-1 text-xs text-rose-500">{errors[id]}</p>
+                    <p className="mt-1 text-xs text-red-500">{errors[id]}</p>
+                  )}
+                  {id === 'password' && passwordStrength.message && (
+                    <div className={`mt-2 text-xs ${
+                      passwordStrength.score < 3 ? 'text-red-500' : 
+                      passwordStrength.score < 4 ? 'text-yellow-600' : 
+                      passwordStrength.score < 5 ? 'text-blue-600' : 'text-green-600'
+                    }`}>
+                      {passwordStrength.message}
+                    </div>
                   )}
                 </div>
               ))}
   
               {errors.general && (
-                <div className="bg-rose-600/10 border border-rose-500 text-rose-300 p-4 rounded-lg text-sm">
+                <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg text-sm">
                   {errors.general}
                 </div>
               )}
@@ -160,16 +212,16 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="w-full flex justify-center py-3 px-4 rounded-md text-sm font-semibold text-white bg-blue-950 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-950 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isLoading ? 'Signing up...' : 'Sign up'}
             </button>
           </form>
   
           <div className="text-center mt-6">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-slate-600">
               Already have an account?{' '}
-              <a href="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
+              <a href="/login" className="font-medium text-blue-950 hover:text-blue-900">
                 Sign in
               </a>
             </p>
