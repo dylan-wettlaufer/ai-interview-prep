@@ -13,7 +13,6 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
-    remember_me: bool = False
 
 class User(BaseModel):
     id: UUID = Field(default_factory=uuid4)

@@ -8,7 +8,6 @@ export default function LoginForm() {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        rememberMe: false,
     });
 
     const [errors, setErrors] = useState({});
@@ -18,15 +17,14 @@ export default function LoginForm() {
     const router = useRouter();
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
         setFormData({
         ...formData,
-        [name]: type === 'checkbox' ? checked : value
+        [e.target.name]: e.target.value
         });
         // Clear error for the field being changed
         setErrors(prev => ({
         ...prev,
-        [name]: ''
+        [e.target.name]: ''
         }));
     };
 
@@ -70,7 +68,6 @@ export default function LoginForm() {
             body: JSON.stringify({
             email: formData.email,
             password: formData.password,
-            remember_me: formData.rememberMe
             }),
         });
 
@@ -181,20 +178,6 @@ export default function LoginForm() {
                     )}
                     </div>
                 ))}
-
-                <div className="flex items-center mb-6">
-                    <input
-                        type="checkbox"
-                        id="rememberMe"
-                        name="rememberMe"
-                        checked={formData.rememberMe}
-                        onChange={handleChange}
-                        className="h-4 w-4 text-blue-950 bg-gray-100 border-gray-300 rounded focus:ring-blue-950 focus:ring-2"
-                    />
-                    <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-700">
-                        Remember me
-                    </label>
-                </div>
     
                 {errors.general && (
                     <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg text-sm">
