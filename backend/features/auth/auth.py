@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Cookie
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
@@ -8,6 +8,11 @@ from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
 from supabase_auth.errors import AuthApiError
 from utils.rate_limiter import check_rate_limit, login_limiter, signup_limiter
+from utils.token_manager import token_manager
+from pydantic import BaseModel
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 load_dotenv()
 
@@ -89,21 +94,44 @@ async def login(data: LoginRequest, request: Request):
 
         print(f"Login SUCCESSFUL! User ID: {login_response.user.id}")
         
-        # Step 3: Create a JWT and set the cookie
-        access_token = login_response.session.access_token
+        # Step 3: Create tokens using our token manager
+        tokens = token_manager.create_tokens(
+            user_id=str(login_response.user.id),
+            remember_me=getattr(data, 'remember_me', False)
+        )
         
-        response = JSONResponse(content={"message": "Login successful"})
+        # Step 4: Set cookies with appropriate expiration
+        response = JSONResponse(content={
+            "message": "Login successful",
+            "user": {
+                "id": login_response.user.id,
+                "email": login_response.user.email
+            }
+        })
+        
+        # Access token cookie (shorter expiration)
         response.set_cookie(
             key="access_token",
-            value=access_token,
+            value=tokens["access_token"],
             httponly=True,
             secure=False,  # Still using False for local testing
             samesite="Lax",
-            max_age=3600,
+            max_age=tokens["access_expires_in"],
             path="/"
         )
-        print("Cookie was set on the response object.")
         
+        # Refresh token cookie (longer expiration)
+        response.set_cookie(
+            key="refresh_token",
+            value=tokens["refresh_token"],
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+            max_age=tokens["refresh_expires_in"],
+            path="/"
+        )
+        
+        print("Tokens were set on the response object.")
         print("--- Login process complete ---")
         return response
         
@@ -126,11 +154,64 @@ async def login(data: LoginRequest, request: Request):
             detail="An unexpected error occurred during login. Please try again."
         )
 
+@router.post("/refresh")
+async def refresh_token(data: RefreshTokenRequest, request: Request):
+    """Refresh access token using refresh token"""
+    try:
+        # Verify the refresh token
+        payload = token_manager.verify_refresh_token(data.refresh_token)
+        
+        # Create new tokens
+        new_tokens = token_manager.create_tokens(
+            user_id=payload["user_id"],
+            remember_me=True  # If user has refresh token, they want extended session
+        )
+        
+        response = JSONResponse(content={
+            "message": "Token refreshed successfully",
+            "access_token": new_tokens["access_token"],
+            "expires_in": new_tokens["access_expires_in"]
+        })
+        
+        # Update access token cookie
+        response.set_cookie(
+            key="access_token",
+            value=new_tokens["access_token"],
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+            max_age=new_tokens["access_expires_in"],
+            path="/"
+        )
+        
+        # Optionally rotate refresh token (more secure)
+        response.set_cookie(
+            key="refresh_token",
+            value=new_tokens["refresh_token"],
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+            max_age=new_tokens["refresh_expires_in"],
+            path="/"
+        )
+        
+        return response
+        
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        print(f"Refresh token error: {e}")
+        raise HTTPException(
+            status_code=401,
+            detail="Failed to refresh token. Please log in again."
+        )
+
 # And for a clean test, let's also update the logout route
 @router.post("/logout")
 async def logout():
     response = JSONResponse(content={"message": "Logged out"})
     response.delete_cookie("access_token", path="/")
+    response.delete_cookie("refresh_token", path="/")
     return response
 
 @router.get("/user")
@@ -143,27 +224,31 @@ def get_current_user(request: Request):
     Dependency to get the current user by verifying the JWT from the cookie.
     Raises an HTTPException if the token is invalid or missing.
     """
-    token = request.cookies.get("access_token")
-    if not token:
+    access_token = request.cookies.get("access_token")
+    if not access_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        # Use Supabase's get_user method to verify the JWT and get user info.
-        # This is the key to using auth.uid in RLS.
-        user_response = supabase.auth.get_user(token)
+        # Use our token manager to verify the access token
+        payload = token_manager.verify_access_token(access_token)
+        
+        # Get user info from Supabase to ensure user still exists
+        user_response = supabase.auth.get_user(access_token)
         if user_response and user_response.user:
             return user_response.user
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
+                detail="User not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
-        # The Supabase client raises exceptions on invalid tokens
+        # The token manager raises exceptions on invalid tokens
         print(f"Token verification error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
