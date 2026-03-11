@@ -14,7 +14,12 @@ load_dotenv()
 router = APIRouter()
 
 # JWT Configuration
-SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key")
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    # In a production environment, you might want to raise an error here
+    # to prevent the server from starting without a secret.
+    print("WARNING: JWT_SECRET is not set in environment variables.")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

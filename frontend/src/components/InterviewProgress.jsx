@@ -81,10 +81,6 @@ export default function InterviewProgress({in_progress}) {
                   <Play className="h-4 w-4" />
                   Resume
                 </Button>
-                <Button variant="outline" size="sm" className="flex items-center gap-2 border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950">
-                  <RotateCcw className="h-4 w-4" />
-                  Restart
-                </Button>
               </div>
             </CardContent>
           </Card>

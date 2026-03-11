@@ -110,12 +110,7 @@ export default function Header() {
                     
                     {/* User Dropdown Menu */}
                     {isProfileDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden">
-                            <a href="#" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors duration-200">
-                                <User size={16} />
-                                Profile
-                            </a>
-                            <div className="border-t border-slate-100 my-1"></div>
+                        <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                             <LogoutButton />
                         </div>
                     )}

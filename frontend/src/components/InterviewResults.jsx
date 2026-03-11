@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Trophy, Target, CheckCircle, XCircle, Lightbulb, ThumbsUp, ThumbsDown, BookOpen, Clock, Home, Download, Share2, RotateCcw } from "lucide-react"
+import { Trophy, Target, CheckCircle, XCircle, Lightbulb, ThumbsUp, ThumbsDown, BookOpen, Clock, Home, Download, Share2, History } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -315,10 +315,12 @@ export default function InterviewResults({ interview, feedback }) {
                         </Button>
                         </Link>
                         
-                        <Button className="w-full flex-1 bg-blue-950 hover:bg-blue-900 text-white">
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            Retake Interview
+                        <Link href="/history" className="flex-1">
+                        <Button className="w-full bg-blue-950 hover:bg-blue-900 text-white">
+                            <History className="h-4 w-4 mr-2" />
+                            View Interview History
                         </Button>
+                        </Link>
                     </div>
 
                 </div>

@@ -401,8 +401,17 @@ async def generate_questions(request: InterviewRequest, user: dict = Depends(get
 @router.get("/interview/{interview_id}")
 async def get_interview(interview_id: str, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     try:
-        response = sb.table("interview").select("*").eq("id", interview_id).execute()
+        response = sb.table("interview").select("*").eq("id", interview_id).eq("user_id", user.id).execute()
+        
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Interview not found or unauthorized access"
+            )
+            
         return response.data[0]
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -416,20 +425,22 @@ async def mark_interview_complete(
     """
     Mark an interview as completed.
     """
-    # 1. First, check if the interview exists and is not already completed
+    # 1. First, check if the interview exists and belongs to the user
     try:
-        response = db.table("interview").select("completed").eq("id", interview_id).limit(1).execute()
+        response = db.table("interview").select("completed").eq("id", interview_id).eq("user_id", current_user.id).limit(1).execute()
         
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Interview not found"
+                detail="Interview not found or unauthorized access"
             )
 
         interview_data = response.data[0]
         if interview_data['completed']:
             return {"message": "Interview was already marked as complete", "interview_id": interview_id}
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -443,7 +454,7 @@ async def mark_interview_complete(
             "completed_at": datetime.now().isoformat()  # Use ISO format for Supabase
         }
         
-        updated_response = db.table("interview").update(data_to_update).eq("id", interview_id).execute()
+        updated_response = db.table("interview").update(data_to_update).eq("id", interview_id).eq("user_id", current_user.id).execute()
         
     except Exception as e:
         raise HTTPException(

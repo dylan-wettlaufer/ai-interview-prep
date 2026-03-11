@@ -152,7 +152,7 @@ async def response(request: FeedbackRequest, user: dict = Depends(get_current_us
 @router.get("/response/{interview_id}/all", response_model=AllFeedbackResponse)
 async def get_all_responses(interview_id: str, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     try:
-        response = sb.table("feedback").select("*").eq("interview_id", interview_id).execute()
+        response = sb.table("feedback").select("*").eq("interview_id", interview_id).eq("user_id", user.id).execute()
         
         # Transform the data into the required format
         feedback_by_question = {}
