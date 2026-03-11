@@ -1,15 +1,18 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from supabase import Client
 from utils.supabase_client import get_authenticated_sb
 from features.auth.auth import get_current_user
+from utils.rate_limiter import check_rate_limit, data_api_limiter
 
 router = APIRouter()
 
 
 @router.get("/interviews/summary")
-async def get_interviews_summary(user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+async def get_interviews_summary(request: Request, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     """Get quick summary stats - for dashboard overview"""
     try:
+        check_rate_limit(request, data_api_limiter, "fetch_data", user.id)
+        
         # Get counts only, no detailed data
         all_interviews = sb.table("interview").select("id, completed").eq("user_id", user.id).execute()
         
@@ -22,14 +25,18 @@ async def get_interviews_summary(user: dict = Depends(get_current_user), sb: Cli
             "in_progress_count": in_progress_count,
             "completion_rate": round((completed_count / len(all_interviews.data)) * 100) if all_interviews.data else 0
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/interviews/in-progress")
-async def get_in_progress_interviews(user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+async def get_in_progress_interviews(request: Request, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     """Get only in-progress interviews - for dashboard"""
     try:
+        check_rate_limit(request, data_api_limiter, "fetch_data", user.id)
+        
         interviews_response = sb.table("interview").select("id, job_type, interview_type, interview_source, difficulty_level, completed").eq("user_id", user.id).eq("completed", False).execute()
         
         if not interviews_response.data:
@@ -46,14 +53,18 @@ async def get_in_progress_interviews(user: dict = Depends(get_current_user), sb:
             "data": processed_interviews,
             "count": len(processed_interviews)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/interviews/completed")
-async def get_completed_interviews(user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+async def get_completed_interviews(request: Request, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     """Get all completed interviews with their feedback/scores"""
     try:
+        check_rate_limit(request, data_api_limiter, "fetch_data", user.id)
+        
         # 1. Fetch all completed interviews for the user
         interviews_response = sb.table("interview").select("id, job_type, interview_type, interview_source, difficulty_level, completed, completed_at").eq("user_id", user.id).eq("completed", True).order("completed_at", desc=True).execute()
         

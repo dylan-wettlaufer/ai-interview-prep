@@ -15,9 +15,14 @@ genai.configure(api_key=os.getenv("API_KEY"))
 
 router = APIRouter()
 
+from utils.rate_limiter import check_rate_limit, feedback_limiter
+
 @router.post("/response", response_model=FeedbackItem)
-async def response(request: FeedbackRequest, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+async def response(request: FeedbackRequest, request_obj: Request, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
     try:
+        # Rate limit by IP and User ID
+        check_rate_limit(request_obj, feedback_limiter, "generate_feedback", user.id)
+        
         interview_id = request.interview_id
         question_number = request.question_number
         job_title = request.job_title

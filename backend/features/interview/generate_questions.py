@@ -290,8 +290,13 @@ def get_predefined_questions(job_title: str):
     return [{"question": q} for q in questions]
 
 
+from utils.rate_limiter import check_rate_limit, gen_ai_limiter
+
 @router.post("/generate")
-async def generate_custom_questions(request: JobInput, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+async def generate_custom_questions(request: JobInput, request_obj: Request, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+    # Rate limit by IP and User ID
+    check_rate_limit(request_obj, gen_ai_limiter, "generate_interview", user.id)
+    
     job_title = request.jobTitle
     job_description = request.jobDescription
     interview_type = request.interviewType
@@ -335,7 +340,9 @@ async def generate_custom_questions(request: JobInput, user: dict = Depends(get_
 
 
 @router.post("/generate-questions")
-async def generate_questions(request: InterviewRequest, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+async def generate_questions(request: InterviewRequest, request_obj: Request, user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+    # Rate limit by IP and User ID
+    check_rate_limit(request_obj, gen_ai_limiter, "generate_interview", user.id)
 
     job = request.jobType
     interview = request.interviewType

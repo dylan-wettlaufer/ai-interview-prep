@@ -15,9 +15,9 @@ router = APIRouter()
 
 # JWT Configuration
 SECRET_KEY = os.getenv("JWT_SECRET")
+SECURE_COOKIES = os.getenv("SECURE_COOKIES", "false").lower() == "true"
+
 if not SECRET_KEY:
-    # In a production environment, you might want to raise an error here
-    # to prevent the server from starting without a secret.
     print("WARNING: JWT_SECRET is not set in environment variables.")
 
 ALGORITHM = "HS256"
@@ -29,8 +29,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @router.post("/signup")
 async def signup(data: SignupRequest, request: Request):
     try:
-        # Check rate limit
-        check_rate_limit(request, signup_limiter, "signup")
+        # Check rate limit by IP and Email
+        check_rate_limit(request, signup_limiter, "signup", data.email)
         
         response = supabase.auth.sign_up({
             "email": data.email,
@@ -77,8 +77,8 @@ async def login(data: LoginRequest, request: Request):
     print(f"Attempting login for email: {data.email}")
 
     try:
-        # Check rate limit
-        check_rate_limit(request, login_limiter, "login")
+        # Check rate limit by IP and Email
+        check_rate_limit(request, login_limiter, "login", data.email)
         
         # Step 1: Call Supabase to authenticate
         login_response = supabase.auth.sign_in_with_password({
@@ -102,12 +102,12 @@ async def login(data: LoginRequest, request: Request):
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=False,  # Still using False for local testing
+            secure=SECURE_COOKIES, 
             samesite="Lax",
             max_age=3600,
             path="/"
         )
-        print("Cookie was set on the response object.")
+        print(f"Cookie was set on the response object. Secure: {SECURE_COOKIES}")
         
         print("--- Login process complete ---")
         return response

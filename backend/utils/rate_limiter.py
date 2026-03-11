@@ -46,8 +46,11 @@ class RateLimiter:
         return max(0, self.max_attempts - len(self.attempts[key]))
 
 # Global rate limiter instances
-login_limiter = RateLimiter(max_attempts=5, window_seconds=300)  # 5 attempts per 5 minutes
-signup_limiter = RateLimiter(max_attempts=3, window_seconds=300)  # 3 attempts per 5 minutes
+login_limiter = RateLimiter(max_attempts=5, window_seconds=300)    # 5 attempts per 5 minutes
+signup_limiter = RateLimiter(max_attempts=3, window_seconds=3600)  # 3 attempts per hour
+gen_ai_limiter = RateLimiter(max_attempts=3, window_seconds=3600)  # 3 interview generations per hour
+feedback_limiter = RateLimiter(max_attempts=10, window_seconds=3600) # 10 feedback responses per hour
+data_api_limiter = RateLimiter(max_attempts=100, window_seconds=60) # 100 data requests per minute
 
 def get_client_key(request: Request) -> str:
     """Get client identifier for rate limiting"""
@@ -62,19 +65,34 @@ def get_client_key(request: Request) -> str:
     
     return request.client.host if request.client else "unknown"
 
-def check_rate_limit(request: Request, limiter: RateLimiter, action: str):
-    """Check rate limit and raise exception if exceeded"""
-    client_key = f"{action}:{get_client_key(request)}"
+def check_rate_limit(request: Request, limiter: RateLimiter, action: str, identifier: str = None):
+    """
+    Check rate limit and raise exception if exceeded.
+    Can limit by IP and optionally by another identifier (like email).
+    """
+    # 1. Check IP-based limit
+    client_ip = get_client_key(request)
+    ip_key = f"{action}:ip:{client_ip}"
     
-    if not limiter.is_allowed(client_key):
-        remaining = limiter.get_remaining_attempts(client_key)
-        raise HTTPException(
-            status_code=429,
-            detail=f"Too many {action} attempts. Please try again later.",
-            headers={
-                "Retry-After": str(limiter.window_seconds),
-                "X-RateLimit-Limit": str(limiter.max_attempts),
-                "X-RateLimit-Remaining": str(remaining),
-                "X-RateLimit-Reset": str(int(time()) + limiter.window_seconds)
-            }
-        )
+    if not limiter.is_allowed(ip_key):
+        raise_rate_limit_error(limiter, action, ip_key)
+    
+    # 2. Check Identifier-based limit (e.g., email) if provided
+    if identifier:
+        id_key = f"{action}:id:{identifier.lower()}"
+        if not limiter.is_allowed(id_key):
+            raise_rate_limit_error(limiter, action, id_key)
+
+def raise_rate_limit_error(limiter: RateLimiter, action: str, key: str):
+    """Helper to raise consistent 429 errors"""
+    remaining = limiter.get_remaining_attempts(key)
+    raise HTTPException(
+        status_code=429,
+        detail=f"Too many {action} attempts. Please try again later.",
+        headers={
+            "Retry-After": str(limiter.window_seconds),
+            "X-RateLimit-Limit": str(limiter.max_attempts),
+            "X-RateLimit-Remaining": str(remaining),
+            "X-RateLimit-Reset": str(int(time()) + limiter.window_seconds)
+        }
+    )
