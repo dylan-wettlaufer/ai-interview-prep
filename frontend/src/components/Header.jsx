@@ -32,6 +32,7 @@ export default function Header() {
 
     // Don't show header on login or signup pages
     const isAuthPage = pathname === '/login' || pathname === '/signup';
+    const isLandingPage = pathname === '/';
     
     // Handle clicking outside the dropdown
     useEffect(() => {
@@ -53,6 +54,27 @@ export default function Header() {
 
     if (isAuthPage) {
         return null;
+    }
+
+    // Landing page header
+    if (isLandingPage) {
+        return (
+            <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-4 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                    <Zap size={28} className="text-blue-950" />
+                    <h1 className="text-2xl font-bold text-blue-950">AceAI</h1>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <Link href="/login" className="text-slate-600 hover:text-blue-950 font-medium transition-colors duration-200">
+                        Log In
+                    </Link>
+                    <Link href="/signup" className="bg-blue-950 hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200">
+                        Sign Up
+                    </Link>
+                </div>
+            </header>
+        );
     }
 
     return (

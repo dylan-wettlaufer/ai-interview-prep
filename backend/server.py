@@ -1,4 +1,8 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+
+load_dotenv()
 from features.auth.auth import router as auth_router
 from features.interview.generate_questions import router as generate_questions_router
 from features.interview.feedback import router as feedback_router
@@ -8,13 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000"   
-]   
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

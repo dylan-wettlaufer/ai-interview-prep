@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Clock, Mic, Type, MicOff, ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
+import { Clock, Mic, Type, MicOff, ArrowLeft, ArrowRight, Loader2, RotateCcw, CheckCircle } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import InterviewFeedback from "./InterviewFeedback"
 import { motion, AnimatePresence } from "framer-motion";
@@ -258,7 +258,6 @@ export default function InterviewQuestion({ interview, question, question_number
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
-            setIsAnswerSubmitted(true);
         }
 
         // Stop speech recognition
@@ -267,8 +266,22 @@ export default function InterviewQuestion({ interview, question, question_number
           setIsListening(false);
       }
 
-      submitAnswer();
+      setInterviewState('review');
+    };
 
+    const handleRetake = () => {
+        setInterviewState('recording');
+        setRecordingTime(0);
+        setSpeechTranscript("");
+        setFinalTranscript("");
+        accumulatedFinalRef.current = "";
+        latestTranscriptRef.current = "";
+        setAudioURL(null);
+    };
+
+    const handleConfirmSubmit = () => {
+        setIsAnswerSubmitted(true);
+        submitAnswer();
     };
 
     const onComplete = async () => {
@@ -503,6 +516,61 @@ export default function InterviewQuestion({ interview, question, question_number
                         </Button>
                         )}
 
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {interviewState === "review" && (
+                <motion.div
+                  key="review"
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.4 }}
+                >
+                  <Card>
+                    <CardContent className="pt-6 space-y-6">
+                      <div className="text-center space-y-2">
+                        <h3 className="text-xl font-semibold text-blue-950">
+                          Review your answer
+                        </h3>
+                        <p className="text-slate-600">
+                          Check your transcript before submitting for analysis
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <p className="text-sm text-slate-500 mb-3 font-medium uppercase tracking-wider">Transcript:</p>
+                        <p className="text-blue-950 leading-relaxed text-lg italic">
+                          "{latestTranscriptRef.current || "No transcript generated."}"
+                        </p>
+                      </div>
+
+                      {audioURL && (
+                        <div className="flex justify-center pt-2">
+                          <audio src={audioURL} controls className="w-full max-w-md" />
+                        </div>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                        <Button
+                          onClick={handleRetake}
+                          variant="outline"
+                          className="flex-1 h-12 border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-blue-950"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Retake Recording
+                        </Button>
+                        <Button
+                          onClick={handleConfirmSubmit}
+                          className="flex-1 h-12 bg-blue-950 hover:bg-blue-900 text-white"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Confirm & Submit
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

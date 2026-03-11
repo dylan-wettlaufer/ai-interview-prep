@@ -25,13 +25,47 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+def get_current_user(request: Request):
+    """
+    Dependency to get the current user by verifying the JWT from the cookie.
+    Raises an HTTPException if the token is invalid or missing.
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    try:
+        # Use Supabase's get_user method to verify the JWT and get user info.
+        # This is the key to using auth.uid in RLS.
+        user_response = supabase.auth.get_user(token)
+        if user_response and user_response.user:
+            return user_response.user
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except Exception as e:
+        # The Supabase client raises exceptions on invalid tokens
+        print(f"Token verification error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
 # Authentication routes
 @router.post("/signup")
 async def signup(data: SignupRequest, request: Request):
     try:
         # Check rate limit by IP and Email
-        check_rate_limit(request, signup_limiter, "signup", data.email)
+        check_rate_limit(request, signup_limiter, "signup", str(data.email))
         
+        # Step 1: Sign up with Supabase Auth
         response = supabase.auth.sign_up({
             "email": data.email,
             "password": data.password,
@@ -43,32 +77,75 @@ async def signup(data: SignupRequest, request: Request):
             }
         })
         
-        
         if response.user is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Signup failed: No user created"
+                detail="Signup failed: Could not create user account."
             )
 
-        supabase.table("user").insert({
-            "id": response.user.id,
-            "first_name": data.first_name,
-            "last_name": data.last_name,
-            "email": data.email
-        }).execute()
+        # Step 2: Create user profile in 'user' table
+        try:
+            supabase.table("user").insert({
+                "id": response.user.id,
+                "first_name": data.first_name,
+                "last_name": data.last_name,
+                "email": data.email
+            }).execute()
+        except Exception as db_e:
+            # If inserting the profile fails (e.g., duplicate email in public.user)
+            # but auth.user was created, we should ideally handle this.
+            print(f"Database profile creation error: {db_e}")
+            # If it's a duplicate, it's a 400, otherwise 500
+            if "duplicate key" in str(db_e).lower():
+                raise HTTPException(status_code=400, detail="An account with this email already exists.")
+            raise db_e
         
+        # Step 3: Check if we have a session (confirmation might be OFF)
+        # If confirmation is OFF, we log them in immediately
+        if response.session:
+            access_token = response.session.access_token
+            res = JSONResponse(content={
+                "message": "Signup successful! You have been logged in.",
+                "user_id": response.user.id,
+                "email_confirmed": True
+            })
+            res.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=SECURE_COOKIES, 
+                samesite="Lax",
+                max_age=3600,
+                path="/"
+            )
+            return res
+            
         return {
-            "message": "User signed up successfully", 
+            "message": "User signed up successfully. Please check your email to confirm your account.", 
             "user_id": response.user.id,
             "email_confirmed": response.user.email_confirmed_at is not None
         }
     
+    except AuthApiError as e:
+        print(f"Supabase Auth Error during signup: {e}")
+        # Specific errors like weak password or user already exists
+        detail = str(e)
+        if "User already registered" in detail:
+            detail = "An account with this email already exists."
+        elif "Password is too short" in detail:
+            detail = "Password must be at least 6 characters."
+            
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail
+        )
     except HTTPException:
-        raise  # Re-raise HTTP exceptions
+        raise
     except Exception as e:
+        print(f"Unexpected signup error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
+            detail="An unexpected error occurred during signup. Please try again."
         )
 
 @router.post("/login")
@@ -139,43 +216,8 @@ async def logout():
     return response
 
 @router.get("/user")
-async def get_user():
-    response = supabase.auth.get_user()
-    return response
-
-def get_current_user(request: Request):
-    """
-    Dependency to get the current user by verifying the JWT from the cookie.
-    Raises an HTTPException if the token is invalid or missing.
-    """
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    try:
-        # Use Supabase's get_user method to verify the JWT and get user info.
-        # This is the key to using auth.uid in RLS.
-        user_response = supabase.auth.get_user(token)
-        if user_response and user_response.user:
-            return user_response.user
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except Exception as e:
-        # The Supabase client raises exceptions on invalid tokens
-        print(f"Token verification error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
+async def get_user(current_user: dict = Depends(get_current_user)):
+    return current_user
 
 @router.get("/protected")
 async def protected_route(current_user: dict = Depends(get_current_user)):
@@ -184,4 +226,3 @@ async def protected_route(current_user: dict = Depends(get_current_user)):
         "user_email": current_user.email,
         "user_uid": current_user.id
     }
-
