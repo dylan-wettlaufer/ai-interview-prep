@@ -101,3 +101,28 @@ export async function getInProgressInterviews() {
 
     return inProgressInterviews;
 }
+
+export async function getCompletedInterviews() {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.toString();
+
+    const response = await fetch(`http://localhost:8000/data/interviews/completed`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Cookie': cookieHeader,
+        },
+    });
+
+    if (response.status === 401) {
+        redirect('/login');
+    }
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const completedInterviews = await response.json();
+
+    return completedInterviews;
+}

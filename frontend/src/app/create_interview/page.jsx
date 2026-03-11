@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from 'react';
 import { ChevronLeft, Zap, Mic, ChevronRight, Loader2 } from 'lucide-react';
-import DashboardHeader from "../dashboard/components/DashboardHeader";
 import { useRouter } from "next/navigation";
 
 export default function CreateInterviewPage() {
@@ -95,7 +94,6 @@ export default function CreateInterviewPage() {
 
     return (
         <div className="flex flex-col min-h-screen bg-white text-blue-950 font-inter">
-            <DashboardHeader />
             <div className="flex-1 relative overflow-y-auto">
 
                 {isGenerating ? (

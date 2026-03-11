@@ -1,4 +1,3 @@
-import DashboardHeader from "./components/DashboardHeader";
 import DashboardStats from "@/components/DashboardStats";
 import InterviewProgress from "@/components/InterviewProgress";
 import TimeBasedGreeting from "@/components/TimeBasedGreeting";
@@ -25,8 +24,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-white">
-          <DashboardHeader />
-          
           <main className=" mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="space-y-8">
               {/* Welcome Section */}

@@ -1,5 +1,4 @@
 "use client";
-import DashboardHeader from '../dashboard/components/DashboardHeader';
 import { useState } from 'react';
 import { useRouter } from "next/navigation";
 

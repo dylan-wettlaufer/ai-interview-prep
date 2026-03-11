@@ -1,6 +1,5 @@
 "use client";
 import {useState, useEffect} from "react";
-import DashboardHeader from "../../dashboard/components/DashboardHeader";
 import InterviewStartScreen from "./components/InterviewStartScreen";
 import InterviewStartScreenSkeleton from "./components/InterviewStartScreenSkeleton";
 import InterviewQuestion from "./components/InterviewQuestion"
@@ -130,8 +129,6 @@ export default function InterviewClient({ interview, feedback }) {
 
     return (
         <div className=" bg-white text-blue-950 font-inter min-h-screen">
-            <DashboardHeader />
-
             {/* render the content variable */}
             {content}
 

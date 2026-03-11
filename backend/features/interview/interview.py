@@ -50,6 +50,52 @@ async def get_in_progress_interviews(user: dict = Depends(get_current_user), sb:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/interviews/completed")
+async def get_completed_interviews(user: dict = Depends(get_current_user), sb: Client = Depends(get_authenticated_sb)):
+    """Get all completed interviews with their feedback/scores"""
+    try:
+        # 1. Fetch all completed interviews for the user
+        interviews_response = sb.table("interview").select("id, job_type, interview_type, interview_source, difficulty_level, completed, completed_at").eq("user_id", user.id).eq("completed", True).order("completed_at", desc=True).execute()
+        
+        if not interviews_response.data:
+            return {"data": [], "count": 0}
+        
+        # 2. Get feedback for these interviews to calculate scores
+        interview_ids = [interview['id'] for interview in interviews_response.data]
+        feedback_response = sb.table("feedback").select("interview_id, overall_score").in_("interview_id", interview_ids).execute()
+        
+        # 3. Group feedback by interview_id and calculate average score
+        scores_by_interview = {}
+        for feedback in feedback_response.data:
+            i_id = feedback['interview_id']
+            if i_id not in scores_by_interview:
+                scores_by_interview[i_id] = []
+            scores_by_interview[i_id].append(feedback['overall_score'])
+            
+        processed_interviews = []
+        for interview in interviews_response.data:
+            scores = scores_by_interview.get(interview['id'], [])
+            avg_score = round(sum(scores) / len(scores)) if scores else 0
+            
+            processed_interviews.append({
+                "id": interview['id'],
+                "job_type": interview['job_type'],
+                "interview_type": interview['interview_type'],
+                "interview_source": interview['interview_source'],
+                "difficulty_level": interview['difficulty_level'],
+                "completed_at": interview['completed_at'],
+                "average_score": avg_score
+            })
+            
+        return {
+            "data": processed_interviews,
+            "count": len(processed_interviews)
+        }
+    except Exception as e:
+        print(f"Error fetching completed interviews: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 def process_interviews_with_progress(interviews, feedback_data):
     """Helper function to process interviews with progress calculations"""

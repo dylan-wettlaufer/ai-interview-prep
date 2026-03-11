@@ -1,6 +1,13 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
-import LogoutButton from "../../../components/LogoutButton";
+import { usePathname } from 'next/navigation';
+import LogoutButton from "@/components/LogoutButton";
+import Link from 'next/link';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+  } from "@/components/ui/tooltip";
 import {
     Bell,
     ChevronDown,
@@ -17,11 +24,15 @@ import {
     Home
   } from 'lucide-react';
 
-export default function DashboardHeader() {
+export default function Header() {
+    const pathname = usePathname();
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const dropdownRef = useRef(null);
 
+    // Don't show header on login or signup pages
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
+    
     // Handle clicking outside the dropdown
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -40,6 +51,10 @@ export default function DashboardHeader() {
         setIsProfileDropdownOpen(!isProfileDropdownOpen);
     };
 
+    if (isAuthPage) {
+        return null;
+    }
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200 p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-2">
@@ -56,9 +71,27 @@ export default function DashboardHeader() {
 */}
             {/* User Actions & Profile */}
             <div className="flex items-center gap-4">
-                <button className="hidden md:flex p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors duration-200">
-                    <Home size={20} />
-                </button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Link href="/dashboard" className="hidden md:flex p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors duration-200">
+                            <Home size={20} />
+                        </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                        <p>Dashboard</p>
+                    </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Link href="/history" className="hidden md:flex p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors duration-200">
+                            <History size={20} />
+                        </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                        <p>Interview History</p>
+                    </TooltipContent>
+                </Tooltip>
                 
                 <div className="relative" ref={dropdownRef}>
                     <button 
