@@ -23,6 +23,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AceAI - AI-Powered Interview Practice",
   description: "Master your next interview with AI-powered practice. Get personalized questions, instant feedback, and track your progress to land your dream job.",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  }
 };
 
 export default function RootLayout({

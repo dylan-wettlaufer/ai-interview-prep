@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import LogoutButton from "@/components/LogoutButton";
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Tooltip,
     TooltipContent,
@@ -21,7 +22,8 @@ import {
     User,
     Zap,
     Award,
-    Home
+    Home,
+    X
   } from 'lucide-react';
 
 export default function Header() {
@@ -30,6 +32,11 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [user, setUser] = useState(null);
     const dropdownRef = useRef(null);
+
+    // Close mobile menu when pathname changes
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname]);
 
     // Don't show header on login or signup pages
     const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -169,24 +176,18 @@ export default function Header() {
     }
 
     return (
+        <>
         <header className="sticky top-0 z-50 bg-white border-b border-slate-200 p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-2">
                 <Zap size={28} className="text-blue-950" />
                 <h1 className="text-2xl font-bold text-blue-950">AceAI</h1>
             </div>
 
-            {/* Desktop Navigation 
-            <nav className="hidden md:flex items-center gap-6 text-slate-600 font-medium">
-                <a href="/dashboard" className="hover:text-blue-950 transition-colors duration-200">Dashboard</a>
-                <a href="#" className="hover:text-blue-950 transition-colors duration-200">History</a>
-                <a href="#" className="hover:text-blue-950 transition-colors duration-200">Settings</a>
-            </nav>
-*/}
-            {/* User Actions & Profile */}
+            {/* Desktop Navigation */}
             <div className="flex items-center gap-4">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Link href="/dashboard" className="hidden md:flex p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors duration-200">
+                        <Link href="/dashboard" className={`hidden md:flex p-2 rounded-full transition-colors duration-200 ${pathname === '/dashboard' ? 'bg-blue-50 text-blue-950' : 'text-slate-600 hover:bg-slate-100'}`}>
                             <Home size={20} />
                         </Link>
                     </TooltipTrigger>
@@ -197,7 +198,7 @@ export default function Header() {
 
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Link href="/history" className="hidden md:flex p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors duration-200">
+                        <Link href="/history" className={`hidden md:flex p-2 rounded-full transition-colors duration-200 ${pathname === '/history' ? 'bg-blue-50 text-blue-950' : 'text-slate-600 hover:bg-slate-100'}`}>
                             <History size={20} />
                         </Link>
                     </TooltipTrigger>
@@ -230,10 +231,79 @@ export default function Header() {
                 </div>
 
                 {/* Mobile Menu Button */}
-                <button className="md:hidden p-2 text-slate-600" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-full" onClick={() => setIsMobileMenuOpen(true)}>
                     <Menu size={24} />
                 </button>
             </div>
         </header>
+
+        {/* Mobile Sidebar Menu */}
+        <AnimatePresence>
+            {isMobileMenuOpen && (
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] md:hidden"
+                    />
+                    
+                    {/* Sidebar */}
+                    <motion.div
+                        initial={{ x: '100%' }}
+                        animate={{ x: 0 }}
+                        exit={{ x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed right-0 top-0 h-full w-[280px] bg-white z-[70] shadow-2xl md:hidden flex flex-col"
+                    >
+                        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Zap size={24} className="text-blue-950" />
+                                <span className="font-bold text-xl text-blue-950">AceAI</span>
+                            </div>
+                            <button 
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="p-2 text-slate-500 hover:bg-slate-100 rounded-full"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <nav className="flex-1 p-4 flex flex-col gap-2">
+                            <Link 
+                                href="/dashboard" 
+                                className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${pathname === '/dashboard' ? 'bg-blue-50 text-blue-950' : 'text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                <Home size={20} />
+                                Dashboard
+                            </Link>
+                            <Link 
+                                href="/history" 
+                                className={`flex items-center gap-3 p-3 rounded-xl font-medium transition-colors ${pathname === '/history' ? 'bg-blue-50 text-blue-950' : 'text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                <History size={20} />
+                                History
+                            </Link>
+                        </nav>
+
+                        <div className="p-4 border-t border-slate-100">
+                            <div className="flex items-center gap-3 p-2 mb-4">
+                                <div className="bg-blue-950 rounded-full w-10 h-10 flex items-center justify-center text-white font-medium">
+                                    {getInitials()}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="font-semibold text-slate-900">{getFirstName()}</span>
+                                    <span className="text-xs text-slate-500 truncate max-w-[160px]">{user?.email}</span>
+                                </div>
+                            </div>
+                            <LogoutButton />
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
+        </>
     );
 }
