@@ -17,9 +17,6 @@ router = APIRouter()
 SECRET_KEY = os.getenv("JWT_SECRET")
 SECURE_COOKIES = os.getenv("SECURE_COOKIES", "false").lower() == "true"
 
-if not SECRET_KEY:
-    print("WARNING: JWT_SECRET is not set in environment variables.")
-
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -51,7 +48,6 @@ def get_current_user(request: Request):
             )
     except Exception as e:
         # The Supabase client raises exceptions on invalid tokens
-        print(f"Token verification error: {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -94,7 +90,6 @@ async def signup(data: SignupRequest, request: Request):
         except Exception as db_e:
             # If inserting the profile fails (e.g., duplicate email in public.user)
             # but auth.user was created, we should ideally handle this.
-            print(f"Database profile creation error: {db_e}")
             # If it's a duplicate, it's a 400, otherwise 500
             if "duplicate key" in str(db_e).lower():
                 raise HTTPException(status_code=400, detail="An account with this email already exists.")
@@ -137,7 +132,6 @@ async def signup(data: SignupRequest, request: Request):
         }
     
     except AuthApiError as e:
-        print(f"Supabase Auth Error during signup: {e}")
         # Specific errors like weak password or user already exists
         detail = str(e)
         if "User already registered" in detail:
@@ -152,7 +146,6 @@ async def signup(data: SignupRequest, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Unexpected signup error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during signup. Please try again."
@@ -160,9 +153,6 @@ async def signup(data: SignupRequest, request: Request):
 
 @router.post("/login")
 async def login(data: LoginRequest, request: Request):
-    print("--- Starting login process ---")
-    print(f"Attempting login for email: {data.email}")
-
     try:
         # Check rate limit by IP and Email
         check_rate_limit(request, login_limiter, "login", data.email)
@@ -172,14 +162,11 @@ async def login(data: LoginRequest, request: Request):
             "email": data.email,
             "password": data.password
         })
-        print(f"Supabase login response received.")
         
         # Step 2: Check if authentication was successful
         if login_response.user is None:
-            print("Login FAILED. Supabase did not return a user object.")
             raise HTTPException(status_code=400, detail="The email or password you entered is incorrect. Please check your credentials and try again.")
 
-        print(f"Login SUCCESSFUL! User ID: {login_response.user.id}")
         
         # Step 3: Create a JWT and set the cookie
         access_token = login_response.session.access_token
@@ -204,13 +191,10 @@ async def login(data: LoginRequest, request: Request):
             max_age=3600,
             path="/"
         )
-        print(f"Cookie was set on the response object. Secure: {SECURE_COOKIES}")
         
-        print("--- Login process complete ---")
         return response
         
     except AuthApiError as e:
-        print(f"Supabase Auth Error: {e}")
         if "Invalid login credentials" in str(e):
             raise HTTPException(
                 status_code=400, 
@@ -222,7 +206,6 @@ async def login(data: LoginRequest, request: Request):
                 detail=f"Authentication failed: {str(e)}"
             )
     except Exception as e:
-        print(f"Unexpected error during login: {e}")
         raise HTTPException(
             status_code=500,
             detail="An unexpected error occurred during login. Please try again."

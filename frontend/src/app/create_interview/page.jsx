@@ -59,8 +59,10 @@ export default function CreateInterviewPage() {
             return;
         }
 
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
         try {
-            const response = await fetch('http://localhost:8000/gen-ai/generate-questions', {
+            const response = await fetch(`${API_BASE_URL}/gen-ai/generate-questions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +79,6 @@ export default function CreateInterviewPage() {
             }
 
             const data = await response.json();
-            console.log(data);
             setErrors({});
             router.push(`/interview/${data.interview_id}`);
             

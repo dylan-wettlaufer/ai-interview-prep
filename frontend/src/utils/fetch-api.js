@@ -1,11 +1,13 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
 export async function getInterview(id) {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`http://localhost:8000/gen-ai/interview/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/gen-ai/interview/${id}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -30,7 +32,7 @@ export async function getFeedback(id) {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`http://localhost:8000/feedback-ai/response/${id}/all`, {
+    const response = await fetch(`${API_BASE_URL}/feedback-ai/response/${id}/all`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -56,7 +58,7 @@ export async function getInterviewSummary() {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`http://localhost:8000/data/interviews/summary`, {
+    const response = await fetch(`${API_BASE_URL}/data/interviews/summary`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ export async function getInProgressInterviews() {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`http://localhost:8000/data/interviews/in-progress`, {
+    const response = await fetch(`${API_BASE_URL}/data/interviews/in-progress`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -106,7 +108,7 @@ export async function getCompletedInterviews() {
     const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
 
-    const response = await fetch(`http://localhost:8000/data/interviews/completed`, {
+    const response = await fetch(`${API_BASE_URL}/data/interviews/completed`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -132,7 +134,7 @@ export async function getCompletedInterviews() {
     const cookieHeader = cookieStore.toString();
 
     try {
-        const response = await fetch(`http://localhost:8000/auth/user`, {
+        const response = await fetch(`${API_BASE_URL}/auth/user`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

@@ -57,8 +57,10 @@ export default function LoginForm() {
         setIsLoading(true);
         setErrors({});
 
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
         try {
-        const response = await fetch('http://localhost:8000/auth/login', {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
@@ -97,20 +99,12 @@ export default function LoginForm() {
 
         setIsLoading(false);
 
-        console.log('Login successful!');
-
         setTimeout(() => {
             router.push('/dashboard');
         }, 100);
 
         } catch (error) {
-        console.log('Login error details:', {
-            message: error.message,
-            status: error.status,
-            isHttpError: error.isHttpError,
-            name: error.name,
-            stack: error.stack
-        });
+        console.error('Login failed:', error.message);
         
         // Handle different types of errors
         let errorMessage = 'Login failed. Please try again or contact support if the issue persists.';

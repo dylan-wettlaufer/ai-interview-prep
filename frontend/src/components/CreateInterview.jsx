@@ -156,8 +156,10 @@ export default function CreateInterview() {
     const handleCreateInterview = async () => {
         setLoading(true)
 
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
         try {
-            const response = await fetch('http://localhost:8000/gen-ai/generate', {
+            const response = await fetch(`${API_BASE_URL}/gen-ai/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -177,7 +179,6 @@ export default function CreateInterview() {
             }
 
             const data = await response.json();
-            console.log(data);
             router.push(`/interview/${data.interview_id}`);
         } catch (error) {
             console.error('Error generating questions:', error);

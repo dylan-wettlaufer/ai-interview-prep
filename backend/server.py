@@ -3,6 +3,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 
 load_dotenv()
+
+# Environment variable validation
+REQUIRED_ENV_VARS = ["SUPABASE_URL", "SUPABASE_KEY", "JWT_SECRET", "API_KEY"]
+missing_vars = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
+if missing_vars:
+    raise RuntimeError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
 from features.auth.auth import router as auth_router
 from features.interview.generate_questions import router as generate_questions_router
 from features.interview.feedback import router as feedback_router

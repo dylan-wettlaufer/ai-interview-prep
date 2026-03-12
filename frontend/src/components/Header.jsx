@@ -44,34 +44,30 @@ export default function Header() {
     
     // Load user from localStorage
     useEffect(() => {
-        console.log("useEffect running, pathname:", pathname);
         const storedUser = localStorage.getItem("user");
-        console.log("Raw localStorage user data:", storedUser);
         if (storedUser) {
             try {
                 const parsedUser = JSON.parse(storedUser);
                 setUser(parsedUser);
-                console.log("User loaded from localStorage:", parsedUser);
             } catch (e) {
                 console.error("Failed to parse user from localStorage", e);
             }
         } else {
-            console.log("No user data found in localStorage, fetching from backend...");
             // Fallback: fetch user data from backend
             fetchUserData();
         }
     }, [pathname]);
 
     const fetchUserData = async () => {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
         try {
-            const response = await fetch('http://localhost:8000/auth/user', {
+            const response = await fetch(`${API_BASE_URL}/auth/user`, {
                 method: 'GET',
                 credentials: 'include', // Important for cookies
             });
             
             if (response.ok) {
                 const userData = await response.json();
-                console.log("User data fetched from backend:", userData);
                 
                 // Extract user_metadata if it exists
                 const userObj = {
@@ -84,9 +80,6 @@ export default function Header() {
                 
                 setUser(userObj);
                 localStorage.setItem("user", JSON.stringify(userObj));
-                console.log("User data stored in localStorage:", userObj);
-            } else {
-                console.log("No valid session found, user not authenticated");
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
@@ -112,20 +105,15 @@ export default function Header() {
     };
 
     const getInitials = () => {
-        console.log("getInitials called, user:", user);
         if (!user) return "??";
         // Try top level first, then user_metadata
         const firstName = user.first_name || user.user_metadata?.first_name || "";
         const lastName = user.last_name || user.user_metadata?.last_name || "";
         
-        console.log("firstName:", firstName, "lastName:", lastName);
-        
         const firstInitial = firstName.charAt(0).toUpperCase();
         const lastInitial = lastName.charAt(0).toUpperCase();
         
         const initials = firstInitial + lastInitial;
-        
-        console.log("initials:", initials, "trimmed:", initials.trim());
         
         if (initials.trim()) return initials;
         

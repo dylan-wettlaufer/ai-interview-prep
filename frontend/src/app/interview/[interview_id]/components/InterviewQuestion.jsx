@@ -165,8 +165,9 @@ export default function InterviewQuestion({ interview, question, question_number
             response: responseText
         };
 
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
         try {
-            const response = await fetch('http://localhost:8000/feedback-ai/response', {
+            const response = await fetch(`${API_BASE_URL}/feedback-ai/response`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,14 +176,11 @@ export default function InterviewQuestion({ interview, question, question_number
                 body: JSON.stringify(feedbackRequest),
             });
 
-            console.log("response", response);
-
             if (!response.ok) {
                 throw new Error('Failed to generate feedback');
             }
 
             const data = await response.json();
-            console.log("Feedback data received:", data);
 
             // Update local state
             setFeedback(data.feedback);
@@ -289,8 +287,8 @@ export default function InterviewQuestion({ interview, question, question_number
       setIsCompleting(true); 
 
       try {
-
-        const response = await fetch(`http://localhost:8000/gen-ai/interview/${interview.id}/complete`, {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        const response = await fetch(`${API_BASE_URL}/gen-ai/interview/${interview.id}/complete`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

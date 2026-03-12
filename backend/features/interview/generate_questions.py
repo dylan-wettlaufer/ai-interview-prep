@@ -205,9 +205,6 @@ def use_ai_api(job_title: str, job_description: str):
     MIN_TITLE_SCORE = 2.0
     MIN_DESC_SCORE = 2.0
 
-    print("Title score: ", title_score)
-    print("Description score: ", desc_score)
-
     if title_score < MIN_TITLE_SCORE or desc_score < MIN_DESC_SCORE:
         return 0  # Fail if either is below threshold
 
@@ -321,7 +318,6 @@ async def generate_custom_questions(request: JobInput, request_obj: Request, use
     interview_source = request.interviewSource
 
     if interview_source == "Category":
-        print("Using predefined questions")
         questions = get_predefined_questions(job_title)
        
     else:
@@ -329,10 +325,8 @@ async def generate_custom_questions(request: JobInput, request_obj: Request, use
         if score < 5:
             questions = get_predefined_questions(job_title)
             interview_source = "Category"
-            print("Using predefined questions, score too low: ", score)
         else:
             questions = await generate_ai_questions(job_title, job_description, interview_type, difficulty_level)
-            print("Using AI questions, score: ", score)
 
     try:
         data_to_insert = {
@@ -351,7 +345,6 @@ async def generate_custom_questions(request: JobInput, request_obj: Request, use
         return {"questions": questions, "interview_id": interview_id}
 
     except Exception as db_e:
-        print("Error storing data in Supabase:", db_e)
         # We can still return the questions even if the DB insert fails
         return {"questions": questions, "message": "Failed to save to database."}
 
@@ -407,7 +400,6 @@ async def generate_questions(request: InterviewRequest, request_obj: Request, us
                 return {"questions": questions_json, "interview_id": interview_id}
 
             except Exception as db_e:
-                print("Error storing data in Supabase:", db_e)
                 # We can still return the questions even if the DB insert fails
                 return {"questions": questions_json, "message": "Failed to save to database."}
             
@@ -416,7 +408,6 @@ async def generate_questions(request: InterviewRequest, request_obj: Request, us
             raise HTTPException(status_code=500, detail="API returned an empty response.")
 
     except Exception as e:
-        print("Error:", e)
         raise HTTPException(status_code=500, detail="Failed to generate questions.")
 
 

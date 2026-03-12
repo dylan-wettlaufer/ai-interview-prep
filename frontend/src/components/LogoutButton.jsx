@@ -7,9 +7,10 @@ export default function LogoutButton() {
   const router = useRouter();
 
   const handleLogout = async () => {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
     try {
       // Send the request with credentials to ensure the browser sends the cookie
-      const response = await fetch('http://localhost:8000/auth/logout', {
+      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -18,8 +19,6 @@ export default function LogoutButton() {
       });
 
       if (response.ok) {
-        console.log("Logout successful on backend, redirecting...");
-        
         // Clear local storage
         localStorage.removeItem("user");
 

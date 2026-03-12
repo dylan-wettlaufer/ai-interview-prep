@@ -27,8 +27,8 @@ async def get_interviews_summary(request: Request, user: dict = Depends(get_curr
         }
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="An internal error occurred.")
 
 
 @router.get("/interviews/in-progress")
@@ -55,8 +55,8 @@ async def get_in_progress_interviews(request: Request, user: dict = Depends(get_
         }
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="An internal error occurred.")
 
 
 @router.get("/interviews/completed")
@@ -102,9 +102,8 @@ async def get_completed_interviews(request: Request, user: dict = Depends(get_cu
             "data": processed_interviews,
             "count": len(processed_interviews)
         }
-    except Exception as e:
-        print(f"Error fetching completed interviews: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="An internal error occurred while fetching completed interviews.")
 
 
 
