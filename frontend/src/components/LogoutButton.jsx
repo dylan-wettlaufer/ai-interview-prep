@@ -19,6 +19,10 @@ export default function LogoutButton() {
 
       if (response.ok) {
         console.log("Logout successful on backend, redirecting...");
+        
+        // Clear local storage
+        localStorage.removeItem("user");
+
         // Add a small delay to give the browser time to delete the cookie
         setTimeout(() => {
           router.push('/login');

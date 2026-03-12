@@ -4,7 +4,7 @@ import TimeBasedGreeting from "@/components/TimeBasedGreeting";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { getInterviewSummary, getInProgressInterviews } from "@/utils/fetch-api";
+import { getInterviewSummary, getInProgressInterviews, getUserProfile } from "@/utils/fetch-api";
 import { Suspense } from "react";
 import DashboardStatsSkeleton from "@/components/DashboardStatsSkeleton";
 import InterviewProgressSkeleton from "@/components/InterviewProgressSkeleton";
@@ -21,6 +21,8 @@ async function InterviewProgressLoader() {
 }
 
 export default async function DashboardPage() {
+  const userProfile = await getUserProfile();
+  const firstName = userProfile?.user_metadata?.first_name || "";
 
   return (
     <div className="min-h-screen bg-white">
@@ -28,7 +30,7 @@ export default async function DashboardPage() {
             <div className="space-y-8">
               {/* Welcome Section */}
               <div className="flex md:flex-row flex-col justify-between md:items-center gap-4">
-              <TimeBasedGreeting />
+              <TimeBasedGreeting initialName={firstName} />
               <Link href="/interview/create">
                 <Button className="bg-blue-950 hover:bg-blue-900 text-white" size="lg" >
                     <Plus className="mr-2 h-4 w-4" />

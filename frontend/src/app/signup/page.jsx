@@ -131,6 +131,10 @@ export default function SignupPage() {
         throw new Error(data.detail || 'Signup failed');
       }
 
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
       setSuccessMessage('Signup successful!');
       // Reset form after successful signup
       setFormData({

@@ -106,7 +106,12 @@ async def signup(data: SignupRequest, request: Request):
             access_token = response.session.access_token
             res = JSONResponse(content={
                 "message": "Signup successful! You have been logged in.",
-                "user_id": response.user.id,
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email,
+                    "first_name": data.first_name,
+                    "last_name": data.last_name
+                },
                 "email_confirmed": True
             })
             res.set_cookie(
@@ -122,7 +127,12 @@ async def signup(data: SignupRequest, request: Request):
             
         return {
             "message": "User signed up successfully. Please check your email to confirm your account.", 
-            "user_id": response.user.id,
+            "user": {
+                "id": response.user.id,
+                "email": response.user.email,
+                "first_name": data.first_name,
+                "last_name": data.last_name
+            },
             "email_confirmed": response.user.email_confirmed_at is not None
         }
     
@@ -174,7 +184,17 @@ async def login(data: LoginRequest, request: Request):
         # Step 3: Create a JWT and set the cookie
         access_token = login_response.session.access_token
         
-        response = JSONResponse(content={"message": "Login successful"})
+        user_metadata = login_response.user.user_metadata if hasattr(login_response.user, 'user_metadata') else {}
+
+        response = JSONResponse(content={
+            "message": "Login successful",
+            "user": {
+                "id": login_response.user.id,
+                "email": login_response.user.email,
+                "first_name": user_metadata.get("first_name", ""),
+                "last_name": user_metadata.get("last_name", "")
+            }
+        })
         response.set_cookie(
             key="access_token",
             value=access_token,

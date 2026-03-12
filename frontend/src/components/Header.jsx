@@ -28,12 +28,64 @@ export default function Header() {
     const pathname = usePathname();
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [user, setUser] = useState(null);
     const dropdownRef = useRef(null);
 
     // Don't show header on login or signup pages
     const isAuthPage = pathname === '/login' || pathname === '/signup';
     const isLandingPage = pathname === '/';
     
+    // Load user from localStorage
+    useEffect(() => {
+        console.log("useEffect running, pathname:", pathname);
+        const storedUser = localStorage.getItem("user");
+        console.log("Raw localStorage user data:", storedUser);
+        if (storedUser) {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                console.log("User loaded from localStorage:", parsedUser);
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
+        } else {
+            console.log("No user data found in localStorage, fetching from backend...");
+            // Fallback: fetch user data from backend
+            fetchUserData();
+        }
+    }, [pathname]);
+
+    const fetchUserData = async () => {
+        try {
+            const response = await fetch('http://localhost:8000/auth/user', {
+                method: 'GET',
+                credentials: 'include', // Important for cookies
+            });
+            
+            if (response.ok) {
+                const userData = await response.json();
+                console.log("User data fetched from backend:", userData);
+                
+                // Extract user_metadata if it exists
+                const userObj = {
+                    id: userData.id,
+                    email: userData.email,
+                    first_name: userData.user_metadata?.first_name || "",
+                    last_name: userData.user_metadata?.last_name || "",
+                    user_metadata: userData.user_metadata || {}
+                };
+                
+                setUser(userObj);
+                localStorage.setItem("user", JSON.stringify(userObj));
+                console.log("User data stored in localStorage:", userObj);
+            } else {
+                console.log("No valid session found, user not authenticated");
+            }
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+        }
+    };
+
     // Handle clicking outside the dropdown
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -50,6 +102,45 @@ export default function Header() {
 
     const toggleProfileDropdown = () => {
         setIsProfileDropdownOpen(!isProfileDropdownOpen);
+    };
+
+    const getInitials = () => {
+        console.log("getInitials called, user:", user);
+        if (!user) return "??";
+        // Try top level first, then user_metadata
+        const firstName = user.first_name || user.user_metadata?.first_name || "";
+        const lastName = user.last_name || user.user_metadata?.last_name || "";
+        
+        console.log("firstName:", firstName, "lastName:", lastName);
+        
+        const firstInitial = firstName.charAt(0).toUpperCase();
+        const lastInitial = lastName.charAt(0).toUpperCase();
+        
+        const initials = firstInitial + lastInitial;
+        
+        console.log("initials:", initials, "trimmed:", initials.trim());
+        
+        if (initials.trim()) return initials;
+        
+        // Fallback to email if name is missing
+        if (user.email) {
+            return user.email.substring(0, 2).toUpperCase();
+        }
+        
+        return "??";
+    };
+
+    const getFirstName = () => {
+        if (!user) return "User";
+        const firstName = user.first_name || user.user_metadata?.first_name;
+        if (firstName) return firstName;
+        
+        // Fallback to email prefix
+        if (user.email) {
+            return user.email.split('@')[0];
+        }
+        
+        return "User";
     };
 
     if (isAuthPage) {
@@ -121,9 +212,9 @@ export default function Header() {
                         onClick={toggleProfileDropdown}
                     >
                         <div className="bg-blue-950 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium text-xs tracking-medium">
-                            DW
+                            {getInitials()}
                         </div>
-                        <span className="hidden md:block font-medium">Dylan</span>
+                        <span className="hidden md:block font-medium">{getFirstName()}</span>
                         <ChevronDown 
                             size={16} 
                             className={`hidden md:block transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} 

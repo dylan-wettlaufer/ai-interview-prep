@@ -125,4 +125,29 @@ export async function getCompletedInterviews() {
     const completedInterviews = await response.json();
 
     return completedInterviews;
-}
+    }
+
+    export async function getUserProfile() {
+    const cookieStore = await cookies();
+    const cookieHeader = cookieStore.toString();
+
+    try {
+        const response = await fetch(`http://localhost:8000/auth/user`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': cookieHeader,
+            },
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const user = await response.json();
+        return user;
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+    }
+    }

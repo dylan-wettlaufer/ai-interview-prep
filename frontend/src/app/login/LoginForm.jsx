@@ -83,6 +83,11 @@ export default function LoginForm() {
         // Clear any existing errors
         setErrors({});
 
+        const data = await response.json();
+        if (data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+        }
+
         setSuccessMessage('Login successful!');
         // Reset form after successful login
         setFormData({
