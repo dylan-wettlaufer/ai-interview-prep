@@ -116,8 +116,8 @@ async def signup(data: SignupRequest, request: Request):
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                secure=SECURE_COOKIES, 
-                samesite="Lax",
+                secure=True,
+                samesite="none",  # must be lowercase "none"
                 max_age=3600,
                 path="/"
             )
