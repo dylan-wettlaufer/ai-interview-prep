@@ -1,7 +1,9 @@
 "use client";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -137,15 +139,13 @@ export default function SignupPage() {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      setSuccessMessage('Signup successful!');
-      // Reset form after successful signup
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      });
+      setSuccessMessage('Signup successful! Redirecting...');
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+
     } catch (error) {
       setErrors({
         ...errors,

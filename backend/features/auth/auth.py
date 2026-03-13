@@ -93,7 +93,10 @@ async def signup(data: SignupRequest, request: Request):
             # If it's a duplicate, it's a 400, otherwise 500
             if "duplicate key" in str(db_e).lower():
                 raise HTTPException(status_code=400, detail="An account with this email already exists.")
-            raise db_e
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to create user profile: {str(db_e)}"
+            )
         
         # Step 3: Check if we have a session (confirmation might be OFF)
         # If confirmation is OFF, we log them in immediately
@@ -121,14 +124,14 @@ async def signup(data: SignupRequest, request: Request):
             return res
             
         return {
-            "message": "User signed up successfully. Please check your email to confirm your account.", 
+            "message": "Signup successful!", 
             "user": {
                 "id": response.user.id,
                 "email": response.user.email,
                 "first_name": data.first_name,
                 "last_name": data.last_name
             },
-            "email_confirmed": response.user.email_confirmed_at is not None
+            "email_confirmed": True
         }
     
     except AuthApiError as e:

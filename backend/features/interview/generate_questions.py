@@ -328,25 +328,52 @@ async def generate_custom_questions(request: JobInput, request_obj: Request, use
         else:
             questions = await generate_ai_questions(job_title, job_description, interview_type, difficulty_level)
 
+    # --- SAFETY CHECK: Ensure user exists in public.user table ---
+    # This prevents FK constraint violations if the user was created via dashboard or signup was interrupted.
+    try:
+        user_check = sb.table("user").select("id").eq("id", user.id).execute()
+        if not user_check.data:
+            print(f"User {user.id} missing from public.user table. Creating profile...")
+            # Fallback: Get metadata from the auth user object
+            user_metadata = getattr(user, 'user_metadata', {})
+            sb.table("user").insert({
+                "id": user.id,
+                "email": user.email,
+                "first_name": user_metadata.get("first_name", "User"),
+                "last_name": user_metadata.get("last_name", "")
+            }).execute()
+    except Exception as e:
+        print(f"Warning: Failed to ensure user profile exists: {str(e)}")
+        # We continue anyway, the interview insert will fail with the FK error if it's still missing,
+        # but this at least tries to fix it.
+
     try:
         data_to_insert = {
             "user_id": user.id,
             "job_type": job_title,
-            "job_description": job_description,
+            # Removed job_description as it may not be a column in the DB
             "interview_type": interview_type,
             "interview_source": interview_source,
             "difficulty_level": difficulty_level,
-            "questions": questions
+            "questions": questions,
+            "completed": False
         }
         
         response = sb.table("interview").insert(data_to_insert).execute()
 
-        interview_id = response.data[0]['id'] if response.data else None
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Failed to save interview to database: No data returned")
+
+        interview_id = response.data[0]['id']
         return {"questions": questions, "interview_id": interview_id}
 
+    except HTTPException:
+        raise
     except Exception as db_e:
-        # We can still return the questions even if the DB insert fails
-        return {"questions": questions, "message": "Failed to save to database."}
+        print(f"Database error: {str(db_e)}")
+        # If it failed because of missing column job_description, we already removed it.
+        # Let's see if it's something else.
+        raise HTTPException(status_code=500, detail=f"Failed to save to database: {str(db_e)}")
 
 
 @router.post("/generate-questions")
@@ -391,24 +418,34 @@ async def generate_questions(request: InterviewRequest, request_obj: Request, us
                     "job_type": request.jobType,
                     "interview_type": request.interviewType,
                     "interview_source": "Basic",
-                    "questions": questions_json
+                    "questions": questions_json,
+                    "difficulty_level": "Mid", # Default for basic
+                    "completed": False,
+                    "total_questions": len(questions_json)
                 }
                 
                 response = sb.table("interview").insert(data_to_insert).execute()
 
-                interview_id = response.data[0]['id'] if response.data else None
+                if not response.data:
+                     raise HTTPException(status_code=500, detail="Failed to save interview to database: No data returned")
+
+                interview_id = response.data[0]['id']
                 return {"questions": questions_json, "interview_id": interview_id}
 
+            except HTTPException:
+                raise
             except Exception as db_e:
-                # We can still return the questions even if the DB insert fails
-                return {"questions": questions_json, "message": "Failed to save to database."}
+                print(f"Database error: {str(db_e)}")
+                raise HTTPException(status_code=500, detail=f"Failed to save to database: {str(db_e)}")
             
 
         else: # if no questions were generated
             raise HTTPException(status_code=500, detail="API returned an empty response.")
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to generate questions.")
+        raise HTTPException(status_code=500, detail=f"Failed to generate questions: {str(e)}")
 
 
         

@@ -74,11 +74,11 @@ class RateLimiter:
         return max(0, self.max_attempts - len(self.attempts[key]))
 
 # Global rate limiter instances
-login_limiter = RateLimiter(max_attempts=5, window_seconds=300)    # 5 attempts per 5 minutes
-signup_limiter = RateLimiter(max_attempts=3, window_seconds=3600)  # 3 attempts per hour
-gen_ai_limiter = RateLimiter(max_attempts=3, window_seconds=3600)  # 3 interview generations per hour
-feedback_limiter = RateLimiter(max_attempts=10, window_seconds=3600) # 10 feedback responses per hour
-data_api_limiter = RateLimiter(max_attempts=100, window_seconds=60) # 100 data requests per minute
+login_limiter = RateLimiter(max_attempts=100, window_seconds=3600)    # 100 attempts per hour
+signup_limiter = RateLimiter(max_attempts=100, window_seconds=3600)   # 100 attempts per hour
+gen_ai_limiter = RateLimiter(max_attempts=50, window_seconds=3600)    # 50 interview generations per hour
+feedback_limiter = RateLimiter(max_attempts=100, window_seconds=3600) # 100 feedback responses per hour
+data_api_limiter = RateLimiter(max_attempts=1000, window_seconds=60)  # 1000 data requests per minute
 
 def get_client_key(request: Request) -> str:
     """
