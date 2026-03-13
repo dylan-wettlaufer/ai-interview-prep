@@ -185,12 +185,13 @@ async def login(data: LoginRequest, request: Request):
                 "last_name": user_metadata.get("last_name", "")
             }
         })
+        # In auth.py, login endpoint (lines 188-196)
         response.set_cookie(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=SECURE_COOKIES, 
-            samesite="Lax",
+            secure=True,  # Always true in production
+            samesite="none",  # Required for cross-domain
             max_age=3600,
             path="/"
         )
