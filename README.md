@@ -90,12 +90,6 @@ I built AceAI to help job seekers practice interviews in a more structured way. 
    Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 
-## Future Improvements
-
-- Improve the AI evaluation model to provide more detailed and nuanced feedback
-- Deploy the application with a hosted frontend and backend
-- Implement analytics to track user progress over multiple interview sessions
-
 ## Contact
 - Dylan Wettlaufer – dwettla3@uwo.ca
 - [LinkedIn](https://www.linkedin.com/in/dylan-wettlaufer-729b842ab/)
