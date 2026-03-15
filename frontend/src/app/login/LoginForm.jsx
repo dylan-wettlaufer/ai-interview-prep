@@ -57,11 +57,10 @@ export default function LoginForm() {
         setIsLoading(true);
         setErrors({});
 
-        console.log("API BASE URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        const API_BASE_URL = '';  // Use relative URLs for same domain
 
         try {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
