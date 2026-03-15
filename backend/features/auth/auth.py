@@ -118,7 +118,6 @@ async def signup(data: SignupRequest, request: Request):
                 httponly=True,
                 secure=True,
                 samesite="none",  # must be lowercase "none"
-                domain=".ai-interview-prep-beta-smoky.vercel.app",
                 max_age=3600,
                 path="/"
             )
@@ -193,7 +192,6 @@ async def login(data: LoginRequest, request: Request):
             httponly=True,
             secure=True,  # Always true in production
             samesite="none",  # Required for cross-domain
-            domain=".ai-interview-prep-beta-smoky.vercel.app",
             max_age=3600,
             path="/"
         )
